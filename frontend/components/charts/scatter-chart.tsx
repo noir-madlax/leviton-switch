@@ -38,6 +38,37 @@ interface ScatterChartProps {
 }
 
 export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, priceType = "sku" }: ScatterChartProps) {
+  // Function to lighten a color
+  const lightenColor = (color: string, amount: number = 0.4) => {
+    // Handle rgb() format
+    if (color.startsWith('rgb(')) {
+      const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
+      if (rgbMatch) {
+        const r = parseInt(rgbMatch[1])
+        const g = parseInt(rgbMatch[2])
+        const b = parseInt(rgbMatch[3])
+        
+        const newR = Math.min(255, Math.floor(r + (255 - r) * amount))
+        const newG = Math.min(255, Math.floor(g + (255 - g) * amount))
+        const newB = Math.min(255, Math.floor(b + (255 - b) * amount))
+        
+        return `rgb(${newR}, ${newG}, ${newB})`
+      }
+    }
+    
+    // Handle hex format
+    const hex = color.replace('#', '')
+    const r = parseInt(hex.substr(0, 2), 16)
+    const g = parseInt(hex.substr(2, 2), 16)
+    const b = parseInt(hex.substr(4, 2), 16)
+    
+    const newR = Math.min(255, Math.floor(r + (255 - r) * amount))
+    const newG = Math.min(255, Math.floor(g + (255 - g) * amount))
+    const newB = Math.min(255, Math.floor(b + (255 - b) * amount))
+    
+    return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`
+  }
+
   const brandColors = {
     Kasa: "rgb(141,211,199)",
     Leviton: "#9B59B6",
@@ -121,14 +152,36 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload
+                    const brandColor = brandColors[data.brand as keyof typeof brandColors] || "#D3D3D3"
+                    const lightColor = lightenColor(brandColor, 0.5)
+                    
                     return (
-                      <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
-                        <p className="font-medium">{data.name}</p>
-                        <p>Brand: {data.brand}</p>
-                        <p>Category: {data.category}</p>
-                        <p>Price: ${data.x.toFixed(2)}</p>
-                        <p>Revenue: ${data.y.toLocaleString()}</p>
-                        <p>Volume: {data.volume.toLocaleString()}</p>
+                      <div 
+                        style={{
+                          backgroundColor: lightColor,
+                          border: `2px solid ${brandColor}`,
+                          borderRadius: '6px',
+                          padding: '12px',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                          width: '33vw',
+                          maxWidth: '400px',
+                          minWidth: '250px'
+                        }}
+                      >
+                        <p style={{ 
+                          fontWeight: 'bold', 
+                          margin: '0 0 6px 0', 
+                          color: '#333',
+                          wordWrap: 'break-word',
+                          lineHeight: '1.4'
+                        }}>
+                          {data.name}
+                        </p>
+                        <p style={{ margin: '3px 0', color: '#333' }}>Brand: {data.brand}</p>
+                        <p style={{ margin: '3px 0', color: '#333' }}>Category: {data.category}</p>
+                        <p style={{ margin: '3px 0', color: '#333' }}>Price: ${data.x.toFixed(2)}</p>
+                        <p style={{ margin: '3px 0', color: '#333' }}>Revenue: ${data.y.toLocaleString()}</p>
+                        <p style={{ margin: '3px 0 0 0', color: '#333' }}>Volume: {data.volume.toLocaleString()}</p>
                       </div>
                     )
                   }
@@ -185,14 +238,36 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload
+                    const brandColor = brandColors[data.brand as keyof typeof brandColors] || "#D3D3D3"
+                    const lightColor = lightenColor(brandColor, 0.5)
+                    
                     return (
-                      <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
-                        <p className="font-medium">{data.name}</p>
-                        <p>Brand: {data.brand}</p>
-                        <p>Category: {data.category}</p>
-                        <p>Price: ${data.x.toFixed(2)}</p>
-                        <p>Revenue: ${data.y.toLocaleString()}</p>
-                        <p>Volume: {data.volume.toLocaleString()}</p>
+                      <div 
+                        style={{
+                          backgroundColor: lightColor,
+                          border: `2px solid ${brandColor}`,
+                          borderRadius: '6px',
+                          padding: '12px',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                          width: '33vw',
+                          maxWidth: '400px',
+                          minWidth: '250px'
+                        }}
+                      >
+                        <p style={{ 
+                          fontWeight: 'bold', 
+                          margin: '0 0 6px 0', 
+                          color: '#333',
+                          wordWrap: 'break-word',
+                          lineHeight: '1.4'
+                        }}>
+                          {data.name}
+                        </p>
+                        <p style={{ margin: '3px 0', color: '#333' }}>Brand: {data.brand}</p>
+                        <p style={{ margin: '3px 0', color: '#333' }}>Category: {data.category}</p>
+                        <p style={{ margin: '3px 0', color: '#333' }}>Price: ${data.x.toFixed(2)}</p>
+                        <p style={{ margin: '3px 0', color: '#333' }}>Revenue: ${data.y.toLocaleString()}</p>
+                        <p style={{ margin: '3px 0 0 0', color: '#333' }}>Volume: {data.volume.toLocaleString()}</p>
                       </div>
                     )
                   }
