@@ -45,9 +45,9 @@ export function GroupedBarChart({
             angle: -90,
             position: "insideLeft",
           }}
-          tickFormatter={(value) => value.toLocaleString()}
+          tickFormatter={(value) => `$${value.toLocaleString()}`}
         />
-        <Tooltip formatter={(value) => Number(value).toLocaleString()} />
+        <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
         <Legend />
         {categories.map((category, index) => (
           <Bar key={category} dataKey={category} fill={colors[index % colors.length]} name={category} />

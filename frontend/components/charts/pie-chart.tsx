@@ -50,7 +50,7 @@ export function PieChart({ data, title, colors = ["#FF6B6B", "#4ECDC4"], annotat
             <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
           ))}
         </Pie>
-        <Tooltip formatter={(value) => Number(value).toLocaleString()} />
+        <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
         <Legend />
       </ReChartsPie>
     </ResponsiveContainer>

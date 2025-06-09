@@ -30,7 +30,7 @@ export function HorizontalBarChart({ data, colors, valueLabel }: HorizontalBarCh
         <CartesianGrid strokeDasharray="3 3" horizontal={false} />
         <XAxis
           type="number"
-          tickFormatter={(value) => value.toLocaleString()}
+          tickFormatter={(value) => `$${value.toLocaleString()}`}
           label={{
             value: valueLabel,
             position: "insideBottom",

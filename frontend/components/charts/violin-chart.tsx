@@ -251,7 +251,7 @@ export function ViolinChart({
       <div className="w-80 ml-4 bg-white border border-gray-200 rounded-md p-4">
         <div className="mb-4">
           <h4 className="font-medium text-sm mb-2">
-            Dimmer Switches ({priceType === "sku" ? "SKU Price" : "Unit Price"}):
+            Dimmer Switches ({priceType === "sku" ? "Total Price (for a full pack)" : "Price per unit"}):
           </h4>
           <div className="text-xs space-y-1">
             <div>Min: ${dimmerStats.min.toFixed(2)}</div>
@@ -264,7 +264,7 @@ export function ViolinChart({
         </div>
         <div>
           <h4 className="font-medium text-sm mb-2">
-            Light Switches ({priceType === "sku" ? "SKU Price" : "Unit Price"}):
+            Light Switches ({priceType === "sku" ? "Total Price (for a full pack)" : "Price per unit"}):
           </h4>
           <div className="text-xs space-y-1">
             <div>Min: ${switchStats.min.toFixed(2)}</div>

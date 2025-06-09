@@ -113,7 +113,7 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
                   angle: -90,
                   position: "insideLeft",
                 }}
-                tickFormatter={(value) => value.toLocaleString()}
+                tickFormatter={(value) => `$${value.toLocaleString()}`}
               />
               <ZAxis range={[60, 400]} />
               <Tooltip
@@ -182,7 +182,7 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
                   angle: -90,
                   position: "insideLeft",
                 }}
-                tickFormatter={(value) => value.toLocaleString()}
+                tickFormatter={(value) => `$${value.toLocaleString()}`}
               />
               <ZAxis range={[60, 400]} />
               <Tooltip

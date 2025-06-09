@@ -132,7 +132,7 @@ export function BrandViolinChart({ brands, priceType, category }: BrandViolinCha
         {/* X-axis labels */}
         {[0, 25, 50, 75, 100, 125, 150].map((x) => (
           <text key={x} x={100 + (x / maxPrice) * 400} y="370" textAnchor="middle" fontSize="12" fill="#64748b">
-            {x}
+            ${x}
           </text>
         ))}
 

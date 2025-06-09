@@ -1,5 +1,7 @@
 # 根目录级别的文件忽略规则
+
 # 系统文件
+package-lock.json
 .DS_Store
 Thumbs.db
 

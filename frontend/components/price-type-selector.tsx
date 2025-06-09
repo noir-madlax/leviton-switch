@@ -24,12 +24,12 @@ export function PriceTypeSelector({ onChange, defaultValue = "sku" }: PriceTypeS
       <Select value={value} onValueChange={handleValueChange}>
         <SelectTrigger className="w-[200px]">
           <SelectValue placeholder="Select price type">
-            {value === "sku" ? "SKU Price (Selling Price)" : "Unit Price (List Price)"}
+            {value === "sku" ? "Total Price (for a full pack)" : "Price per unit"}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="sku">SKU Price (Selling Price)</SelectItem>
-          <SelectItem value="unit">Unit Price (List Price)</SelectItem>
+          <SelectItem value="sku">Total Price (for a full pack)</SelectItem>
+          <SelectItem value="unit">Price per unit</SelectItem>
         </SelectContent>
       </Select>
     </div>
