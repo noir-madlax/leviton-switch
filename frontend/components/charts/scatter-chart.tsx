@@ -88,8 +88,8 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
               margin={{
                 top: 20,
                 right: 30,
-                left: 30,
-                bottom: 30,
+                left: 60,
+                bottom: 50,
               }}
             >
               <CartesianGrid strokeDasharray="3 3" />
@@ -157,8 +157,8 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
               margin={{
                 top: 20,
                 right: 30,
-                left: 30,
-                bottom: 30,
+                left: 60,
+                bottom: 50,
               }}
             >
               <CartesianGrid strokeDasharray="3 3" />

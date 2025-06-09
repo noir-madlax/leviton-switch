@@ -25,7 +25,7 @@ export function BrandAnalysis({ data }: BrandAnalysisProps) {
 
       <h3 className="text-xl font-semibold mb-4">Brand Revenue by Category (Dimmers vs Switches)</h3>
       <Card className="p-6 bg-gray-50">
-        <div className="h-96">
+        <div className="h-[500px]">
           <BarChart
             data={chartData}
             index="name"

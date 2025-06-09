@@ -35,8 +35,8 @@ export function BarChart({
         margin={{
           top: 20,
           right: 30,
-          left: 30,
-          bottom: 70,
+          left: 90,
+          bottom: 20,
         }}
       >
         <CartesianGrid strokeDasharray="3 3" />
@@ -44,23 +44,39 @@ export function BarChart({
           dataKey={index}
           angle={-45}
           textAnchor="end"
-          height={70}
+          tick={{ fontSize: 12 }}
+          height={110} // Allocate a generous, fixed height for the entire X-axis block
+          interval={0}
           label={{
             value: xAxisLabel,
-            position: "insideBottom",
-            offset: -40,
+            position: "bottom",
+            offset: 10,
           }}
         />
         <YAxis
-          label={{
-            value: yAxisLabel,
-            angle: -90,
-            position: "insideLeft",
-          }}
           tickFormatter={(value) => `$${value.toLocaleString()}`}
         />
         <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-        <Legend />
+        <Legend
+          verticalAlign="bottom"
+          iconSize={12}
+          wrapperStyle={{
+            paddingTop: 30, // Push legend down from X-axis
+          }}
+        />
+
+        {/* Custom Y-axis label */}
+        <text
+          x={35}
+          y={250}
+          transform={`rotate(-90, 35, 250)`}
+          textAnchor="middle"
+          fontSize="18"
+          fontWeight="500"
+          fill="#374151"
+        >
+          {yAxisLabel}
+        </text>
         {categories.map((category, index) => (
           <Bar key={category} dataKey={category} fill={colors[index % colors.length]} name={category} />
         ))}

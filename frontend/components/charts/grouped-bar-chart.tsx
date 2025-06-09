@@ -26,8 +26,8 @@ export function GroupedBarChart({
         margin={{
           top: 20,
           right: 30,
-          left: 30,
-          bottom: 30,
+          left: 80,
+          bottom: 80,
         }}
       >
         <CartesianGrid strokeDasharray="3 3" />
@@ -36,7 +36,7 @@ export function GroupedBarChart({
           label={{
             value: xAxisLabel,
             position: "insideBottom",
-            offset: -10,
+            offset: -30,
           }}
         />
         <YAxis
