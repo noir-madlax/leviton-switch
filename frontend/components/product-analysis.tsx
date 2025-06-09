@@ -79,7 +79,7 @@ export function ProductAnalysis({ data }: ProductAnalysisProps) {
       <h3 className="text-xl font-semibold mb-4">Top 20 Products by Revenue (Price vs Revenue by Category)</h3>
       <Card className="p-6 bg-gray-50 mb-8">
         <PriceTypeSelector onChange={setPriceType} />
-        <div className="h-[600px]">
+        <div className="h-[800px]">
           <ScatterChart
             dimmerData={dimmerData}
             switchData={switchData}

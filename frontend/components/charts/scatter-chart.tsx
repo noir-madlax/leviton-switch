@@ -82,14 +82,14 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
 
       <div className="flex-1">
         <h4 className="text-center text-base font-medium mb-1">☀️ Dimmer Switches - Price vs Revenue</h4>
-        <div className="h-[250px]">
+        <div className="h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <ReChartsScatter
               margin={{
                 top: 20,
                 right: 30,
-                left: 60,
-                bottom: 50,
+                left: 30,
+                bottom: 20,
               }}
             >
               <CartesianGrid strokeDasharray="3 3" />
@@ -97,25 +97,20 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
                 type="number"
                 dataKey="x"
                 name="Price"
-                label={{
-                  value: xAxisLabel,
-                  position: "insideBottom",
-                  offset: -10,
-                }}
+                tickFormatter={(value) => `$${Number(value).toFixed(2)}`}
+                label={{ value: xAxisLabel, position: "insideBottom", offset: 0 }}
                 domain={["auto", "auto"]}
+                height={50}
               />
               <YAxis
                 type="number"
                 dataKey="y"
                 name="Revenue"
-                label={{
-                  value: yAxisLabel,
-                  angle: -90,
-                  position: "insideLeft",
-                }}
                 tickFormatter={(value) => `$${value.toLocaleString()}`}
+                label={{ value: yAxisLabel, angle: -90, position: "insideLeft", offset: -5 }}
+                width={90}
               />
-              <ZAxis range={[60, 400]} />
+              <ZAxis range={[100, 101]} />
               <Tooltip
                 cursor={{ strokeDasharray: "3 3" }}
                 formatter={(value, name, props) => {
@@ -140,7 +135,7 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
                   return null
                 }}
               />
-              <Legend />
+              <Legend verticalAlign="bottom" height={20} iconSize={10} />
               {Object.entries(dimmerByBrand).map(([brand, data]) =>
                 renderScatter(data, brand, brandColors[brand as keyof typeof brandColors] || "#D3D3D3"),
               )}
@@ -151,14 +146,14 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
 
       <div className="flex-1 mt-4">
         <h4 className="text-center text-base font-medium mb-1">💡 Light Switches - Price vs Revenue</h4>
-        <div className="h-[250px]">
+        <div className="h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <ReChartsScatter
               margin={{
                 top: 20,
                 right: 30,
-                left: 60,
-                bottom: 50,
+                left: 20,
+                bottom: 20,
               }}
             >
               <CartesianGrid strokeDasharray="3 3" />
@@ -166,25 +161,20 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
                 type="number"
                 dataKey="x"
                 name="Price"
-                label={{
-                  value: xAxisLabel,
-                  position: "insideBottom",
-                  offset: -10,
-                }}
+                tickFormatter={(value) => `$${Number(value).toFixed(2)}`}
+                label={{ value: xAxisLabel, position: "insideBottom", offset: 0 }}
                 domain={["auto", "auto"]}
+                height={50}
               />
               <YAxis
                 type="number"
                 dataKey="y"
                 name="Revenue"
-                label={{
-                  value: yAxisLabel,
-                  angle: -90,
-                  position: "insideLeft",
-                }}
                 tickFormatter={(value) => `$${value.toLocaleString()}`}
+                label={{ value: yAxisLabel, angle: -90, position: "insideLeft", offset: -8 }}
+                width={90}
               />
-              <ZAxis range={[60, 400]} />
+              <ZAxis range={[100, 101]} />
               <Tooltip
                 cursor={{ strokeDasharray: "3 3" }}
                 formatter={(value, name, props) => {
@@ -209,7 +199,7 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
                   return null
                 }}
               />
-              <Legend />
+              <Legend verticalAlign="bottom" height={20} iconSize={10} />
               {Object.entries(switchByBrand).map(([brand, data]) =>
                 renderScatter(data, brand, brandColors[brand as keyof typeof brandColors] || "#D3D3D3"),
               )}
