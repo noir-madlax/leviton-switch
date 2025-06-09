@@ -1,0 +1,26 @@
+# 根目录级别的文件忽略规则
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# IDE 配置文件
+.vscode/
+.idea/
+
+# 临时文件
+*.tmp
+*.temp
+*.log
+
+# 环境变量文件（根目录级别）
+.env
+.env.local
+.env.production
+
+# 备份文件
+*.bak
+*.backup
+
+# 说明：前端和后端项目分别有自己的 .gitignore 文件
+# frontend/.gitignore - 管理 Next.js 项目相关的忽略规则
+# backend/.gitignore - 管理 Python 项目相关的忽略规则 
