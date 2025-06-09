@@ -4,6 +4,7 @@ import { BrandAnalysis } from "@/components/brand-analysis"
 import { ProductAnalysis } from "@/components/product-analysis"
 import { PricingAnalysis } from "@/components/pricing-analysis"
 import { MarketInsights } from "@/components/market-insights"
+import { PackagePreferenceAnalysis } from "@/components/package-preference-analysis"
 import { SummaryMetrics } from "@/components/summary-metrics"
 import { ReviewInsights } from "@/components/review-insights"
 import { fetchDashboardData } from "@/lib/data"
@@ -29,6 +30,7 @@ export default async function Home() {
             <ProductAnalysis data={data.productAnalysis} />
             <PricingAnalysis data={data.pricingAnalysis} />
             <MarketInsights data={data.marketInsights} />
+            <PackagePreferenceAnalysis />
             <SummaryMetrics data={data.summaryMetrics} />
           </TabsContent>
           
