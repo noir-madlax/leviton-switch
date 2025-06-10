@@ -184,9 +184,9 @@ def clean_unit_price(unit_price_str):
     return 0.0
 
 def extract_pack_number(title):
-    """Extract pack number from product title"""
+    """Extract pack number from product title. Returns None if not found."""
     if pd.isna(title):
-        return 1
+        return None
     
     title = str(title).lower()
     
@@ -208,7 +208,28 @@ def extract_pack_number(title):
             if 1 <= pack_num <= 100:
                 return pack_num
     
-    return 1  # Default to 1 if no pack number found
+    return None  # Return None if no pack number found
+
+def get_pack_count(row):
+    """
+    Determines pack count with the following priority:
+    1. Extract from title using specific patterns ('pack', 'count').
+    2. Calculate from total price and unit price.
+    3. Default to 1.
+    """
+    pack_count = extract_pack_number(row['title'])
+    if pack_count is not None:
+        return pack_count
+    
+    total_price = row['price_usd']
+    unit_price_val = clean_unit_price(row['unit_price'])
+    if pd.notna(total_price) and total_price > 0 and pd.notna(unit_price_val) and unit_price_val > 0:
+        # To avoid division by zero
+        calculated_pack = round(total_price / unit_price_val)
+        if calculated_pack > 0:
+            return int(calculated_pack)
+            
+    return 1
 
 def calculate_unit_price(row):
     """Calculate unit price considering pack numbers when unit_price is missing"""
@@ -219,8 +240,9 @@ def calculate_unit_price(row):
     if unit_price == 0.0:
         total_price = row['price_usd'] if not pd.isna(row['price_usd']) else 0.0
         if total_price > 0:
-            pack_number = extract_pack_number(row['title'])
-            unit_price = total_price / pack_number
+            pack_number = row['pack_count'] # Use pre-calculated pack_count
+            if pack_number > 0:
+                unit_price = total_price / pack_number
     
     return unit_price
 
@@ -278,6 +300,10 @@ def load_and_process_data(csv_path: str) -> tuple:
     
     # Fill missing prices with 0
     filtered_df['price_usd'] = pd.to_numeric(filtered_df['price_usd'], errors='coerce').fillna(0)
+    
+    # Add pack_count column BEFORE calculating unit_price
+    filtered_df['pack_count'] = filtered_df.apply(get_pack_count, axis=1)
+
     # Calculate unit price using pack numbers when needed
     filtered_df['unit_price'] = filtered_df.apply(calculate_unit_price, axis=1)
     
@@ -536,6 +562,114 @@ def calculate_pricing_analysis(dimmer_df: pd.DataFrame, switch_df: pd.DataFrame)
         "brandPriceDistribution": brand_price_distribution
     }
 
+def calculate_package_preference_analysis(dimmer_df: pd.DataFrame, switch_df: pd.DataFrame) -> Dict:
+    """Calculates data for package preference analysis with separate data for dimmers and switches."""
+    
+    def calculate_distribution_for_category(df: pd.DataFrame, category_name: str) -> List[Dict]:
+        """Calculate package distribution for a specific category"""
+        if len(df) == 0:
+            return []
+            
+        bins = [0, 1, 3, 9, float('inf')]
+        labels = ["1 Pack", "2-3 Pack", "4-9 Pack", "10+ Pack"]
+
+        df_copy = df.copy()
+        df_copy['pack_size_category'] = pd.cut(df_copy['pack_count'], bins=bins, labels=labels, right=True)
+        
+        dist_grouped = df_copy.groupby('pack_size_category', observed=True).agg(
+            count=('platform_id', 'count'),
+            salesVolume=('volume', 'sum'),
+            revenue=('revenue', 'sum')
+        ).reset_index()
+
+        total_products = len(df_copy)
+        total_revenue = dist_grouped['revenue'].sum()
+        
+        dist_grouped['percentage'] = round((dist_grouped['count'] / total_products) * 100, 1)
+        dist_grouped['revenuePercentage'] = round((dist_grouped['revenue'] / total_revenue) * 100, 1) if total_revenue > 0 else 0
+
+        distribution = []
+        for _, row in dist_grouped.iterrows():
+            distribution.append({
+                "packSize": row['pack_size_category'],
+                "count": int(row['count']),
+                "percentage": float(row['percentage']),
+                "salesVolume": int(row['salesVolume']),
+                "salesRevenue": int(row['revenue'])
+            })
+            
+        return distribution
+    
+    def normalize_title_for_grouping(title: str) -> str:
+        if pd.isna(title):
+            return ""
+        
+        patterns = [
+            r'\s*\(?\[?\d+\s*[-]?\s*(?:packs?|counts?|pcs?)\)?\]?',
+            r',\s*\d+\s*[-]?\s*(?:packs?|counts?|pcs?)',
+            r'\s*pack of \d+',
+        ]
+        
+        normalized_title = title
+        for p in patterns:
+            normalized_title = re.sub(p, '', normalized_title, flags=re.IGNORECASE)
+            
+        return normalized_title.strip().rstrip(',').strip()
+
+    # Combine both dataframes for sameProductComparison (this part can use combined data)
+    combined_df = pd.concat([dimmer_df, switch_df], ignore_index=True)
+    combined_df['base_title'] = combined_df['clean_title'].apply(normalize_title_for_grouping)
+    
+    # 1. sameProductComparison (keep existing logic but with combined data)
+    product_groups = combined_df.groupby(['clean_brand', 'base_title'])
+    
+    # Get groups with multiple pack sizes
+    multi_pack_groups = []
+    for name, group in product_groups:
+        if len(group['pack_count'].unique()) > 1:
+            multi_pack_groups.append(group)
+            
+    # Sort these groups by total sales volume
+    multi_pack_groups.sort(key=lambda g: g['volume'].sum(), reverse=True)
+    
+    same_product_comparison = []
+    # Take top 5 product groups to show as examples
+    for group in multi_pack_groups[:5]:
+        # Sort by pack_count within the group
+        group = group.sort_values('pack_count')
+        for _, row in group.iterrows():
+            if row['volume'] > 0 and row['price_usd'] > 0 and row['pack_count'] > 0 and row['unit_price'] > 0:
+                # Deduplicate, some products might be listed twice
+                product_repr = f"{row['clean_brand']} {row['base_title']} {row['pack_count']} Pack"
+                # A simple check to avoid adding the exact same entry if data has duplicates
+                is_present = False
+                for p in same_product_comparison:
+                    if p['productName'] == f"{row['clean_brand']} {row['base_title']}" and p['packCount'] == row['pack_count']:
+                        is_present = True
+                        break
+                if is_present:
+                    continue
+
+                same_product_comparison.append({
+                    "productName": f"{row['clean_brand']} {row['base_title']}",
+                    "packSize": f"{row['pack_count']} Pack",
+                    "packCount": int(row['pack_count']),
+                    "salesVolume": int(row['volume']),
+                    "price": float(row['price_usd']),
+                    "unitPrice": float(row['unit_price'])
+                })
+    
+    # 2. Calculate separate distributions for dimmer switches and light switches
+    dimmer_distribution = calculate_distribution_for_category(dimmer_df, "Dimmer Switches")
+    switch_distribution = calculate_distribution_for_category(switch_df, "Light Switches")
+        
+    return {
+        "sameProductComparison": same_product_comparison,
+        "packageDistribution": dimmer_distribution + switch_distribution,  # Keep for backward compatibility
+        "dimmerSwitches": dimmer_distribution,
+        "lightSwitches": switch_distribution
+    }
+
 def generate_data_ts(csv_path: str, output_path: str):
     """Main function to generate data.ts file"""
     
@@ -552,6 +686,7 @@ def generate_data_ts(csv_path: str, output_path: str):
     market_insights = calculate_product_segment_insights(dimmer_df, switch_df)
     summary_metrics = calculate_summary_metrics(all_df, dimmer_df, switch_df)
     pricing_analysis = calculate_pricing_analysis(dimmer_df, switch_df)
+    package_preference_analysis = calculate_package_preference_analysis(dimmer_df, switch_df)
     
     # Generate TypeScript content
     ts_content = f'''// Auto-generated from combined_products_with_final_categories.csv
@@ -587,6 +722,7 @@ export async function fetchDashboardData() {{
       ]
     }},
     pricingAnalysis: {json.dumps(pricing_analysis, indent=6)},
+    packagePreferenceAnalysis: {json.dumps(package_preference_analysis, indent=6)},
     marketInsights: {json.dumps(market_insights, indent=6)},
     summaryMetrics: {json.dumps(summary_metrics, indent=6)}
   }};

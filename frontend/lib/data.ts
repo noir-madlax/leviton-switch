@@ -1,5 +1,5 @@
 // Auto-generated from combined_products_with_final_categories.csv
-// Generated on 2025-06-09 18:45:10
+// Generated on 2025-06-09 21:07:32
 // Source: Amazon scraped data (filtered: source=amazon, product_segment!=OUT_OF_SCOPE)
 
 export async function fetchDashboardData() {
@@ -1834,6 +1834,127 @@ export async function fetchDashboardData() {
                               ]
                         }
                   ]
+            }
+      ]
+},
+    packagePreferenceAnalysis: {
+      "sameProductComparison": [],
+      "packageDistribution": [
+            {
+                  "packSize": "1 Pack",
+                  "count": 105,
+                  "percentage": 69.5,
+                  "salesVolume": 29850,
+                  "salesRevenue": 854048
+            },
+            {
+                  "packSize": "2-3 Pack",
+                  "count": 25,
+                  "percentage": 16.6,
+                  "salesVolume": 4250,
+                  "salesRevenue": 208881
+            },
+            {
+                  "packSize": "4-9 Pack",
+                  "count": 16,
+                  "percentage": 10.6,
+                  "salesVolume": 3950,
+                  "salesRevenue": 249138
+            },
+            {
+                  "packSize": "10+ Pack",
+                  "count": 5,
+                  "percentage": 3.3,
+                  "salesVolume": 650,
+                  "salesRevenue": 57543
+            },
+            {
+                  "packSize": "1 Pack",
+                  "count": 73,
+                  "percentage": 53.3,
+                  "salesVolume": 22950,
+                  "salesRevenue": 342044
+            },
+            {
+                  "packSize": "2-3 Pack",
+                  "count": 13,
+                  "percentage": 9.5,
+                  "salesVolume": 7450,
+                  "salesRevenue": 244205
+            },
+            {
+                  "packSize": "4-9 Pack",
+                  "count": 18,
+                  "percentage": 13.1,
+                  "salesVolume": 2200,
+                  "salesRevenue": 38370
+            },
+            {
+                  "packSize": "10+ Pack",
+                  "count": 33,
+                  "percentage": 24.1,
+                  "salesVolume": 9450,
+                  "salesRevenue": 244292
+            }
+      ],
+      "dimmerSwitches": [
+            {
+                  "packSize": "1 Pack",
+                  "count": 105,
+                  "percentage": 69.5,
+                  "salesVolume": 29850,
+                  "salesRevenue": 854048
+            },
+            {
+                  "packSize": "2-3 Pack",
+                  "count": 25,
+                  "percentage": 16.6,
+                  "salesVolume": 4250,
+                  "salesRevenue": 208881
+            },
+            {
+                  "packSize": "4-9 Pack",
+                  "count": 16,
+                  "percentage": 10.6,
+                  "salesVolume": 3950,
+                  "salesRevenue": 249138
+            },
+            {
+                  "packSize": "10+ Pack",
+                  "count": 5,
+                  "percentage": 3.3,
+                  "salesVolume": 650,
+                  "salesRevenue": 57543
+            }
+      ],
+      "lightSwitches": [
+            {
+                  "packSize": "1 Pack",
+                  "count": 73,
+                  "percentage": 53.3,
+                  "salesVolume": 22950,
+                  "salesRevenue": 342044
+            },
+            {
+                  "packSize": "2-3 Pack",
+                  "count": 13,
+                  "percentage": 9.5,
+                  "salesVolume": 7450,
+                  "salesRevenue": 244205
+            },
+            {
+                  "packSize": "4-9 Pack",
+                  "count": 18,
+                  "percentage": 13.1,
+                  "salesVolume": 2200,
+                  "salesRevenue": 38370
+            },
+            {
+                  "packSize": "10+ Pack",
+                  "count": 33,
+                  "percentage": 24.1,
+                  "salesVolume": 9450,
+                  "salesRevenue": 244292
             }
       ]
 },

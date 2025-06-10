@@ -25,13 +25,13 @@ export default async function Home() {
           </TabsList>
           
           <TabsContent value="market-analysis" className="mt-6">
-            <ExecutiveSummary data={data.executiveSummary} />
+            
             <BrandAnalysis data={data.brandAnalysis} />
             <ProductAnalysis data={data.productAnalysis} />
             <PricingAnalysis data={data.pricingAnalysis} />
             <MarketInsights data={data.marketInsights} />
-            <PackagePreferenceAnalysis />
-            <SummaryMetrics data={data.summaryMetrics} />
+            <PackagePreferenceAnalysis data={data.packagePreferenceAnalysis} />
+            
           </TabsContent>
           
           <TabsContent value="review-insights" className="mt-6">
