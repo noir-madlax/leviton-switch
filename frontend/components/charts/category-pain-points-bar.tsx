@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CategoryFeedback, ProductType, getAvailableProductTypes } from '@/lib/categoryFeedback'
+import { getSatisfactionColor, SatisfactionLegend } from '@/lib/satisfactionColors'
 
 interface CategoryPainPointsBarProps {
   data: CategoryFeedback[]
@@ -24,10 +25,18 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="text-sm text-orange-600">Negative Rate: {data.negativeRate}%</p>
         <p className="text-sm text-green-600">Satisfaction Rate: {data.satisfactionRate}%</p>
         <div className="mt-2">
-          <p className="text-xs text-gray-500">Top Issues:</p>
+          <p className="text-xs text-gray-500">Top Issue Details:</p>
           {data.topNegativeAspects.slice(0, 3).map((aspect: string, index: number) => (
             <p key={index} className="text-xs text-gray-600">• {aspect}</p>
           ))}
+          {data.topNegativeReasons && data.topNegativeReasons.length > 0 && (
+            <div className="mt-2">
+              <p className="text-xs text-gray-500">Top Issue Reasons:</p>
+              {data.topNegativeReasons.slice(0, 3).map((reason: string, index: number) => (
+                <p key={index} className="text-xs text-red-600">• {reason}</p>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     )
@@ -44,13 +53,9 @@ export function CategoryPainPointsBar({ data, productType = 'dimmer', onProductT
     setSelectedProductType(productType)
   }, [productType])
 
-  // 根据负面评价数量计算颜色 - 红色渐变（负面评价数越多颜色越深）
-  const getBarColor = (negativeCount: number) => {
-    if (negativeCount >= 50) return '#dc2626'      // 深红色 - 50+负面评价
-    if (negativeCount >= 30) return '#ef4444'      // 红色 - 30-49负面评价
-    if (negativeCount >= 20) return '#f87171'      // 中红色 - 20-29负面评价
-    if (negativeCount >= 10) return '#fca5a5'      // 浅红色 - 10-19负面评价
-    return '#fed7d7'                              // 很浅红色 - 1-9负面评价
+  // Use satisfaction rate for consistent coloring across all charts
+  const getBarColor = (item: CategoryFeedback) => {
+    return getSatisfactionColor(item.satisfactionRate)
   }
 
   // 数据已经按负面评价数排序，直接使用前10个
@@ -68,24 +73,7 @@ export function CategoryPainPointsBar({ data, productType = 'dimmer', onProductT
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Top 10 Most Critical Categories by Negative Reviews Count
-          <div className="flex items-center gap-2 text-sm">
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-red-600 rounded"></div>
-              <span className="text-xs">Very High (50+)</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-red-400 rounded"></div>
-              <span className="text-xs">High (30-49)</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-red-300 rounded"></div>
-              <span className="text-xs">Medium (20-29)</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-red-200 rounded"></div>
-              <span className="text-xs">Low (10-19)</span>
-            </div>
-          </div>
+          <SatisfactionLegend />
         </CardTitle>
         <div className="flex items-center justify-between">
           <CardDescription>Categories ranked by absolute negative review count</CardDescription>
@@ -141,7 +129,7 @@ export function CategoryPainPointsBar({ data, productType = 'dimmer', onProductT
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="negativeCount" radius={[4, 4, 0, 0]}>
                 {filteredData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={getBarColor(entry.negativeCount)} />
+                  <Cell key={`cell-${index}`} fill={getBarColor(entry)} />
                 ))}
               </Bar>
             </BarChart>
@@ -152,14 +140,14 @@ export function CategoryPainPointsBar({ data, productType = 'dimmer', onProductT
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
           {filteredData.slice(0, 4).map((item, index) => (
             <div key={index} className="text-center">
-              <div className="text-lg font-bold" style={{color: getBarColor(item.negativeCount)}}>
+              <div className="text-lg font-bold" style={{color: getBarColor(item)}}>
                 {item.negativeCount}
               </div>
               <div className="text-sm text-gray-600 truncate" title={item.category}>
                 {item.category}
               </div>
-              <div className="text-xs text-red-600">
-                negative reviews
+              <div className="text-xs" style={{color: getBarColor(item)}}>
+                {item.satisfactionRate}% satisfaction
               </div>
             </div>
           ))}

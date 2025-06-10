@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { UseCaseFeedback, ProductType } from '@/lib/categoryFeedback';
+import { getSatisfactionColor, getSatisfactionLevel, SatisfactionLegend } from '@/lib/satisfactionColors';
 
 interface CategoryUseCaseBarProps {
   data: UseCaseFeedback[];
@@ -14,24 +15,6 @@ interface CategoryUseCaseBarProps {
   productType?: ProductType;
   onProductTypeChange?: (productType: ProductType) => void;
 }
-
-// 根据满意度返回颜色 - 从红色(低满意度)到绿色(高满意度)
-const getSatisfactionColor = (satisfactionRate: number): string => {
-  if (satisfactionRate >= 80) return '#22c55e'; // 绿色 - 非常满意
-  if (satisfactionRate >= 65) return '#84cc16'; // 浅绿色 - 比较满意  
-  if (satisfactionRate >= 50) return '#eab308'; // 黄色 - 一般满意
-  if (satisfactionRate >= 35) return '#f97316'; // 橙色 - 不太满意
-  return '#ef4444'; // 红色 - 很不满意
-};
-
-// 获取满意度等级文本
-const getSatisfactionLevel = (satisfactionRate: number): string => {
-  if (satisfactionRate >= 80) return 'Excellent';
-  if (satisfactionRate >= 65) return 'Good';
-  if (satisfactionRate >= 50) return 'Average';
-  if (satisfactionRate >= 35) return 'Poor';
-  return 'Very Poor';
-};
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -97,19 +80,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           </div>
         )}
 
-        {/* 相关分类 */}
-        {data.relatedCategories && data.relatedCategories.length > 0 && (
-          <div>
-            <p className="text-sm font-medium text-gray-700 mb-1">Related Categories:</p>
-            <div className="flex flex-wrap gap-1">
-              {data.relatedCategories.slice(0, 3).map((category: string, index: number) => (
-                <Badge key={index} variant="secondary" className="text-xs">
-                  {category}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -137,20 +107,7 @@ export default function CategoryUseCaseBar({
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           {title}
-          <div className="flex items-center gap-2 text-sm">
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-green-500 rounded"></div>
-              <span className="text-xs">High Satisfaction</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-yellow-500 rounded"></div>
-              <span className="text-xs">Medium</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-red-500 rounded"></div>
-              <span className="text-xs">Low Satisfaction</span>
-            </div>
-          </div>
+          <SatisfactionLegend />
         </CardTitle>
         <div className="flex items-center justify-between">
           <CardDescription>{description}</CardDescription>
@@ -221,8 +178,8 @@ export default function CategoryUseCaseBar({
                 <div className="text-sm text-gray-600 truncate" title={item.useCase}>
                   {item.useCase}
                 </div>
-                <div className="text-xs text-blue-600">
-                  total mentions
+                <div className="text-xs" style={{color: getSatisfactionColor(item.satisfactionRate)}}>
+                  {item.satisfactionRate}% satisfaction
                 </div>
               </div>
             ))}

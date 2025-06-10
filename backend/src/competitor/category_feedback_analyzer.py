@@ -1,385 +1,478 @@
 #!/usr/bin/env python3
 """
 Category Feedback Analyzer
-分析每个phy/perf分类的正负面反馈数据，支持按产品类型（Dimmer/Light Switches）分开处理
-使用sentiment标记直接判断正负面，同时生成正面和负面分析数据
 
-Usage:
-    python category_feedback_analyzer.py
+Analyze categorized review aspects to generate comprehensive feedback analysis
+including category-based pain points, strengths, and use case satisfaction data.
 
-Output:
-    生成 frontend/lib/categoryFeedback.ts 文件
+This script reads from the actual generated data files:
+- consolidated_aspect_categorization.json (categorized aspects)
+- expanded_review_results.json (detailed review analysis)
+- aspect_category_definitions.json (category definitions)
 """
 
 import json
-import os
-import sys
 import pandas as pd
-from collections import defaultdict
-from datetime import datetime
+from typing import Dict, List, Any, Set, Tuple
 from pathlib import Path
-from typing import Dict, List, Tuple, Any, Optional, Set
+from datetime import datetime
+from collections import defaultdict
 
+# === CONSTANTS ===
+# Minimum number of reviews required for statistical significance
+MIN_REVIEWS_FOR_STATS = 5
 
+# Product type mapping keywords for classification
+PRODUCT_TYPE_KEYWORDS = {
+    'dimmer': ['dimmer', 'dimming', 'dimmable', 'brightness control', 'light level'],
+    'light': ['switch', 'light switch', 'toggle', 'on/off', 'rocker switch']
+}
+
+CURRENT_DIR = Path(__file__).parent.parent.parent
+DATA_DIR = CURRENT_DIR / "data/result/process_review/20250609_05"
+OUTPUT_PATH = CURRENT_DIR.parent / "frontend/lib/categoryFeedback.ts"
+# Data file names
+CONSOLIDATED_ASPECT_FILE = "consolidated_aspect_categorization.json"
+EXPANDED_REVIEW_FILE = "expanded_review_results.json"
+CATEGORY_DEFINITIONS_FILE = "aspect_category_definitions.json"
+PRODUCT_MAPPING_FILE = "product_type_mapping.json"
+
+# === DATA STRUCTURES ===
 class CategoryFeedbackAnalyzer:
+    """
+    Analyzes categorized review aspects to generate feedback insights
+    """
+    
     def __init__(self, data_dir: str):
         """
-        初始化分析器
+        Initialize analyzer with data directory
         
         Args:
-            data_dir: 数据目录路径，包含JSON文件
+            data_dir: Directory containing the processed data files
         """
         self.data_dir = Path(data_dir)
-        self.consolidated_data = None
-        self.expanded_reviews = None
-        self.category_definitions = None
-        self.product_mapping = None  # 新增：产品类型映射
         
-        # 结果数据 - 按产品类型分开
-        self.category_stats_by_type = {
-            'dimmer': {},
-            'light': {}
-        }
-        self.summary_stats_by_type = {
-            'dimmer': {},
-            'light': {}
-        }
+        # Data storage
+        self.consolidated_data = {}
+        self.expanded_reviews = {}
+        self.category_definitions = {}
+        self.product_mapping = {}
         
-        # 使用场景分析数据 - 按产品类型分开
-        self.use_case_stats_by_type = {
-            'dimmer': {},
-            'light': {}
-        }
+        # Analysis results
+        self.category_stats_by_type = {'dimmer': {}, 'light': {}}
+        self.use_case_stats_by_type = {'dimmer': {}, 'light': {}}
+        self.summary_stats_by_type = {'dimmer': {}, 'light': {}}
         
     def load_product_mapping(self):
-        """加载产品类型映射数据"""
-        print("正在加载产品类型映射数据...")
+        """Load or generate product type mapping"""
+        mapping_path = self.data_dir / PRODUCT_MAPPING_FILE
         
-        # 加载产品分类CSV文件
-        csv_file = self.data_dir.parent.parent / "product_segment/combined_products_cleaned/combined_products_with_final_categories.csv"
-        if not csv_file.exists():
-            raise FileNotFoundError(f"找不到产品分类文件: {csv_file}")
-        
-        # 读取CSV文件
-        df = pd.read_csv(csv_file)
-        
-        # 创建ASIN到产品类型的映射
-        self.product_mapping = {}
-        for _, row in df.iterrows():
-            asin = row['platform_id']
-            product_segment = row['product_segment']
-            category = row['category']
+        if mapping_path.exists():
+            with open(mapping_path, 'r', encoding='utf-8') as f:
+                self.product_mapping = json.load(f)
+            print(f"Loaded product mapping for {len(self.product_mapping)} products")
+        else:
+            # Generate mapping based on product titles and categories
+            print("Generating product type mapping from consolidated data...")
+            self.product_mapping = self._generate_product_mapping()
             
-            # 确定产品类型
-            if 'Dimmer' in category or 'Dimmer' in product_segment:
-                product_type = 'dimmer'
-            elif 'Light Switch' in category or 'Switch' in category:
-                product_type = 'light' 
-            else:
-                continue  # 跳过不明确的产品
-                
-            self.product_mapping[asin] = {
-                'type': product_type,
-                'segment': product_segment,
-                'category': category
-            }
-        
-        dimmer_count = len([p for p in self.product_mapping.values() if p['type'] == 'dimmer'])
-        light_count = len([p for p in self.product_mapping.values() if p['type'] == 'light'])
-        
-        print(f"✓ 已加载产品映射数据: {len(self.product_mapping)} 个产品")
-        print(f"  - Dimmer Switches: {dimmer_count} 个产品")
-        print(f"  - Light Switches: {light_count} 个产品")
-        
-    def load_data(self):
-        """加载所需的数据文件"""
-        print("正在加载数据文件...")
-        
-        # 加载产品映射
-        self.load_product_mapping()
-        
-        # 加载consolidated aspect categorization
-        consolidated_file = self.data_dir / "consolidated_aspect_categorization.json"
-        if not consolidated_file.exists():
-            raise FileNotFoundError(f"找不到文件: {consolidated_file}")
-        
-        with open(consolidated_file, 'r', encoding='utf-8') as f:
-            self.consolidated_data = json.load(f)
-        print(f"✓ 已加载 consolidated_aspect_categorization.json")
-        
-        # 加载expanded review results
-        expanded_file = self.data_dir / "expanded_review_results.json"
-        if not expanded_file.exists():
-            raise FileNotFoundError(f"找不到文件: {expanded_file}")
-        
-        with open(expanded_file, 'r', encoding='utf-8') as f:
-            self.expanded_reviews = json.load(f)
-        print(f"✓ 已加载 expanded_review_results.json")
-        
-        # 加载category definitions
-        definitions_file = self.data_dir / "aspect_category_definitions.json"
-        if not definitions_file.exists():
-            raise FileNotFoundError(f"找不到文件: {definitions_file}")
-        
-        with open(definitions_file, 'r', encoding='utf-8') as f:
-            self.category_definitions = json.load(f)
-        print(f"✓ 已加载 aspect_category_definitions.json")
-        
-    def extract_rating_score(self, rating_str: str) -> float:
+            # Save generated mapping
+            with open(mapping_path, 'w', encoding='utf-8') as f:
+                json.dump(self.product_mapping, f, indent=2, ensure_ascii=False)
+            print(f"Generated and saved product mapping for {len(self.product_mapping)} products")
+    
+    def _generate_product_mapping(self) -> Dict[str, Dict[str, str]]:
         """
-        从评分字符串中提取数字评分
-        
-        Args:
-            rating_str: 如 "4.0 out of 5 stars"
-            
-        Returns:
-            float: 评分数字，如 4.0
+        Generate product type mapping based on product titles and categories
         """
+        mapping = {}
+        
+        # Try to load from CSV first
         try:
-            if isinstance(rating_str, str) and "out of 5 stars" in rating_str:
-                return float(rating_str.split()[0])
-            return 0.0
-        except (ValueError, IndexError):
-            return 0.0
+            csv_path = self.data_dir.parent.parent / "product_segment" / "combined_products_cleaned" / "combined_products_with_final_categories.csv"
+            if csv_path.exists():
+                products_df = pd.read_csv(csv_path)
+                if 'product_segment' in products_df.columns:
+                    for _, row in products_df.iterrows():
+                        asin = row['platform_id']
+                        title = row.get('title', '')
+                        segment = row.get('product_segment', 'light')
+                        
+                        # Map product segment to our types
+                        product_type = 'dimmer' if 'dimmer' in segment.lower() else 'light'
+                        
+                        mapping[asin] = {
+                            'type': product_type,
+                            'title': title,
+                            'segment': segment
+                        }
+                    return mapping
+        except Exception as e:
+            print(f"Could not load from CSV: {e}")
+        
+        # Fallback: classify based on expanded review data
+        if self.expanded_reviews:
+            for product_id, product_data in self.expanded_reviews.get('results', {}).items():
+                title = product_data.get('product_title', '').lower()
+                category = product_data.get('product_category', '').lower()
+                
+                # Classify based on keywords
+                product_type = 'light'  # default
+                text_to_check = f"{title} {category}"
+                
+                for type_name, keywords in PRODUCT_TYPE_KEYWORDS.items():
+                    if any(keyword in text_to_check for keyword in keywords):
+                        product_type = type_name
+                        break
+                
+                mapping[product_id] = {
+                    'type': product_type,
+                    'title': product_data.get('product_title', ''),
+                    'segment': product_data.get('product_category', '')
+                }
+        
+        return mapping
+    
+    def load_data(self):
+        """Load all required data files"""
+        print("Loading data files...")
+        
+        # Load consolidated aspect categorization
+        consolidated_path = self.data_dir / CONSOLIDATED_ASPECT_FILE
+        if consolidated_path.exists():
+            with open(consolidated_path, 'r', encoding='utf-8') as f:
+                self.consolidated_data = json.load(f)
+            print(f"Loaded consolidated data for {len(self.consolidated_data.get('results', {}))} products")
+        else:
+            raise FileNotFoundError(f"Consolidated data not found at {consolidated_path}")
+        
+        # Load expanded review results
+        expanded_path = self.data_dir / EXPANDED_REVIEW_FILE
+        if expanded_path.exists():
+            with open(expanded_path, 'r', encoding='utf-8') as f:
+                self.expanded_reviews = json.load(f)
+            print(f"Loaded expanded reviews for {len(self.expanded_reviews.get('results', {}))} products")
+        else:
+            print("Warning: Expanded review results not found, will use limited data")
+        
+        # Load category definitions
+        definitions_path = self.data_dir / CATEGORY_DEFINITIONS_FILE
+        if definitions_path.exists():
+            with open(definitions_path, 'r', encoding='utf-8') as f:
+                self.category_definitions = json.load(f)
+            print("Loaded category definitions")
+        else:
+            print("Warning: Category definitions not found")
+        
+        # Load product mapping
+        self.load_product_mapping()
+    
+    def extract_rating_score(self, rating_str: str) -> float:
+        """Extract numeric rating from rating string"""
+        if not rating_str:
+            return 3.0
+        
+        try:
+            # Extract first number from rating string
+            import re
+            numbers = re.findall(r'\d+\.?\d*', str(rating_str))
+            if numbers:
+                return float(numbers[0])
+        except:
+            pass
+        
+        return 3.0  # Default neutral rating
     
     def analyze_categories(self):
-        """分析所有分类的痛点数据，按产品类型分开处理，使用sentiment标记直接判断正负面"""
-        print("正在分析分类数据（使用sentiment标记直接判断正负面）...")
+        """Analyze category feedback by product type using actual data"""
+        print("Analyzing category feedback by product type...")
         
-        # 为每种产品类型初始化统计数据
-        category_data_by_type = {
-            'dimmer': defaultdict(lambda: {
-                'mentions': 0,
-                'positive_reviews': [],
-                'negative_reviews': [],
-                'all_reviews': [],
-                'category_type': '',
-                'top_negative_aspects': [],
-                'top_positive_aspects': []  # 新增：收集正面aspects
-            }),
-            'light': defaultdict(lambda: {
-                'mentions': 0,
-                'positive_reviews': [],
-                'negative_reviews': [],
-                'all_reviews': [],
-                'category_type': '',
-                'top_negative_aspects': [],
-                'top_positive_aspects': []  # 新增：收集正面aspects
-            })
-        }
-        
-        # 遍历所有产品
-        total_products = len(self.consolidated_data['results'])
-        processed_products = 0
-        products_by_type_count = {'dimmer': 0, 'light': 0, 'unknown': 0}
-        
-        for product_id, product_data in self.consolidated_data['results'].items():
-            processed_products += 1
-            if processed_products % 10 == 0:
-                print(f"  处理进度: {processed_products}/{total_products}")
-            
-            # 检查是否在expanded_reviews中有对应数据
-            if product_id not in self.expanded_reviews.get('results', {}):
-                continue
-                
-            # 确定产品类型
+        for product_id, product_data in self.consolidated_data.get('results', {}).items():
             if product_id not in self.product_mapping:
-                products_by_type_count['unknown'] += 1
                 continue
-                
+            
             product_type = self.product_mapping[product_id]['type']
-            products_by_type_count[product_type] += 1
+            aspect_categorization = product_data.get('aspect_categorization', {})
             
-            expanded_product = self.expanded_reviews['results'][product_id]
+            # Get corresponding expanded review data
+            expanded_product = self.expanded_reviews.get('results', {}).get(product_id, {})
+            review_analysis = expanded_product.get('review_analysis', {})
             
-            # 获取对应的category_data
-            category_data = category_data_by_type[product_type]
-            
-            # 处理phy和perf分类
-            for category_type in ['phy', 'perf']:
-                if category_type not in product_data['aspect_categorization']:
+            # Process physical and performance categories
+            for section_type in ['phy', 'perf']:
+                if section_type not in aspect_categorization:
                     continue
+                
+                section_data = aspect_categorization[section_type]
+                review_section = review_analysis.get(section_type, {})
+                
+                # Process each aspect group in this section
+                for aspect_group_name, aspect_mappings in section_data.items():
+                    if not isinstance(aspect_mappings, dict):
+                        continue
                     
-                # 遍历aspect groups
-                for aspect_group_name, aspect_group in product_data['aspect_categorization'][category_type].items():
-                    for aspect_key, category_name in aspect_group.items():
-                        if category_name == "OUT_OF_SCOPE":
+                    # Get corresponding review data for this aspect group
+                    group_reviews = review_section.get(aspect_group_name, {})
+                    
+                    # Process each aspect mapping
+                    for aspect_key, final_category in aspect_mappings.items():
+                        if final_category == "OUT_OF_SCOPE":
                             continue
-                            
-                        category_data[category_name]['mentions'] += 1
-                        category_data[category_name]['category_type'] = 'Physical' if category_type == 'phy' else 'Performance'
                         
-                        # 查找对应的评价数据
-                        review_analysis = expanded_product.get('review_analysis', {})
-                        if category_type not in review_analysis:
-                            continue
-                            
-                        type_analysis = review_analysis[category_type]
-                        if aspect_group_name not in type_analysis:
-                            continue
-                            
-                        group_analysis = type_analysis[aspect_group_name]
-                        if aspect_key not in group_analysis:
-                            continue
-                            
-                        aspect_reviews = group_analysis[aspect_key]
+                        # Initialize category stats
+                        if final_category not in self.category_stats_by_type[product_type]:
+                            self.category_stats_by_type[product_type][final_category] = {
+                                'category': final_category,
+                                'categoryType': 'Physical' if section_type == 'phy' else 'Performance',
+                                'mentions': 0,
+                                'positiveCount': 0,
+                                'negativeCount': 0,
+                                'totalReviews': 0,
+                                'satisfactionRate': 0.0,
+                                'negativeRate': 0.0,
+                                'averageRating': 0.0,
+                                'topNegativeAspects': [],
+                                'topPositiveAspects': [],
+                                'topNegativeReasons': [],
+                                'topPositiveReasons': [],
+                                'rating_sum': 0,
+                                'rating_count': 0
+                            }
                         
-                        # 处理正面和负面评价 - 直接使用sentiment标记
+                        category_stats = self.category_stats_by_type[product_type][final_category]
+                        
+                        # Get sentiment data for this aspect
+                        aspect_reviews = group_reviews.get(aspect_key, {})
+                        
+                        # Process positive and negative sentiments
                         for sentiment in ['+', '-']:
                             if sentiment not in aspect_reviews:
                                 continue
-                                
-                            reviews_list = aspect_reviews[sentiment]
-                            if not isinstance(reviews_list, list):
+                            
+                            sentiment_data = aspect_reviews[sentiment]
+                            if isinstance(sentiment_data, list):
+                                # Simple list of review IDs
+                                review_ids = sentiment_data
+                                reasons = []
+                            elif isinstance(sentiment_data, dict):
+                                # Dict with reasons mapping to review IDs
+                                review_ids = []
+                                reasons = []
+                                for reason_code, reason_reviews in sentiment_data.items():
+                                    if isinstance(reason_reviews, list):
+                                        review_ids.extend(reason_reviews)
+                                        # Resolve reason codes to descriptions for performance sections
+                                        if section_type == 'perf':
+                                            resolved_reasons = self.resolve_reason_codes(reason_code, review_analysis, sentiment)
+                                            if resolved_reasons:  # Only add non-empty reasons
+                                                for resolved_reason in resolved_reasons:
+                                                    reasons.extend([resolved_reason] * len(reason_reviews))
+                                        else:
+                                            # For physical aspects, use reason as-is (skip '?' codes)
+                                            if reason_code != '?':
+                                                reasons.extend([reason_code] * len(reason_reviews))
+                            else:
                                 continue
-                                
-                            for review in reviews_list:
-                                if not isinstance(review, dict):
-                                    continue
-                                    
-                                rating_score = self.extract_rating_score(review.get('rating', ''))
-                                review_data = {
-                                    'rating': rating_score,
-                                    'sentiment': sentiment,
-                                    'aspect_key': aspect_key,
-                                    'product_id': product_id
-                                }
-                                
-                                category_data[category_name]['all_reviews'].append(review_data)
-                                
-                                # 直接使用sentiment标记分类正负面
-                                if sentiment == '+':
-                                    category_data[category_name]['positive_reviews'].append(review_data)
-                                    # 收集正面aspects
-                                    aspect_text = aspect_key.split('@', 1)[-1] if '@' in aspect_key else aspect_key
-                                    category_data[category_name]['top_positive_aspects'].append(aspect_text)
-                                elif sentiment == '-':
-                                    category_data[category_name]['negative_reviews'].append(review_data)
-                                    # 收集负面aspects
-                                    aspect_text = aspect_key.split('@', 1)[-1] if '@' in aspect_key else aspect_key
-                                    category_data[category_name]['top_negative_aspects'].append(aspect_text)
+                            
+                            # Count mentions and sentiment
+                            mention_count = len(review_ids)
+                            category_stats['mentions'] += mention_count
+                            category_stats['totalReviews'] += mention_count
+                            
+                            # Extract clean aspect description
+                            clean_aspect = aspect_key.split('@', 1)[-1] if '@' in aspect_key else aspect_key
+                            
+                            if sentiment == '+':
+                                category_stats['positiveCount'] += mention_count
+                                # Add to positive aspects and reasons
+                                category_stats['topPositiveAspects'].append(clean_aspect)
+                                category_stats['topPositiveReasons'].extend(reasons)
+                            else:
+                                category_stats['negativeCount'] += mention_count
+                                # Add to negative aspects and reasons
+                                category_stats['topNegativeAspects'].append(clean_aspect)
+                                category_stats['topNegativeReasons'].extend(reasons)
+                            
+                            # Add rating data if available (using default rating since raw review data is not in processed files)
+                            for review_id in review_ids:
+                                # Use default rating since we don't have access to raw review ratings in processed data
+                                if isinstance(review_id, (int, str)):
+                                    try:
+                                        # Convert to int if it's a string representation
+                                        review_id_int = int(review_id) if isinstance(review_id, str) else review_id
+                                        # Use default neutral rating since raw review data is not available
+                                        default_rating = 3.0
+                                        category_stats['rating_sum'] += default_rating
+                                        category_stats['rating_count'] += 1
+                                    except (ValueError, TypeError):
+                                        # Skip invalid review IDs
+                                        continue
         
-        print(f"产品类型分布: Dimmer={products_by_type_count['dimmer']}, Light={products_by_type_count['light']}, Unknown={products_by_type_count['unknown']}")
-        
-        # 计算每种产品类型的统计指标
-        print("正在计算统计指标...")
+        # Calculate final statistics
+        self._calculate_category_statistics()
+    
+    def _calculate_category_statistics(self):
+        """Calculate final statistics for categories"""
         for product_type in ['dimmer', 'light']:
-            self.category_stats_by_type[product_type] = {}
-            category_data = category_data_by_type[product_type]
-            
-            for category_name, data in category_data.items():
-                total_reviews = len(data['all_reviews'])
-                if total_reviews == 0:
-                    continue
-                    
-                positive_count = len(data['positive_reviews'])
-                negative_count = len(data['negative_reviews'])
+            for category_name, stats in self.category_stats_by_type[product_type].items():
+                total_reviews = stats['totalReviews']
+                if total_reviews > 0:
+                    stats['satisfactionRate'] = round((stats['positiveCount'] / total_reviews) * 100, 1)
+                    stats['negativeRate'] = round((stats['negativeCount'] / total_reviews) * 100, 1)
                 
-                # 计算满意度（基于sentiment标记）
-                satisfaction_rate = (positive_count / total_reviews) * 100 if total_reviews > 0 else 0
-                negative_rate = (negative_count / total_reviews) * 100 if total_reviews > 0 else 0
+                if stats['rating_count'] > 0:
+                    stats['averageRating'] = round(stats['rating_sum'] / stats['rating_count'], 1)
+                else:
+                    stats['averageRating'] = 3.0
                 
-                # 计算平均评分
-                all_ratings = [r['rating'] for r in data['all_reviews'] if r['rating'] > 0]
-                average_rating = sum(all_ratings) / len(all_ratings) if all_ratings else 0
+                # Count occurrences and format top aspects and reasons with counts
+                from collections import Counter
                 
-                # 获取最频繁的负面aspects (最多5个)
-                negative_aspects_count = defaultdict(int)
-                for aspect in data['top_negative_aspects']:
-                    negative_aspects_count[aspect] += 1
+                # Process aspects
+                positive_counter = Counter(stats['topPositiveAspects'])
+                top_positive_with_counts = positive_counter.most_common(5)
+                stats['topPositiveAspects'] = [
+                    f"{aspect} ({count}x)" if count > 1 else aspect 
+                    for aspect, count in top_positive_with_counts
+                ]
                 
-                top_negative_aspects = sorted(
-                    negative_aspects_count.items(), 
-                    key=lambda x: x[1], 
-                    reverse=True
-                )[:5]
+                negative_counter = Counter(stats['topNegativeAspects'])
+                top_negative_with_counts = negative_counter.most_common(5)
+                stats['topNegativeAspects'] = [
+                    f"{aspect} ({count}x)" if count > 1 else aspect 
+                    for aspect, count in top_negative_with_counts
+                ]
                 
-                # 获取最频繁的正面aspects (最多5个)
-                positive_aspects_count = defaultdict(int)
-                for aspect in data['top_positive_aspects']:
-                    positive_aspects_count[aspect] += 1
+                # Process reasons
+                positive_reasons_counter = Counter(stats['topPositiveReasons'])
+                top_positive_reasons_with_counts = positive_reasons_counter.most_common(5)
+                stats['topPositiveReasons'] = [
+                    f"{reason} ({count}x)" if count > 1 else reason 
+                    for reason, count in top_positive_reasons_with_counts
+                ]
                 
-                top_positive_aspects = sorted(
-                    positive_aspects_count.items(), 
-                    key=lambda x: x[1], 
-                    reverse=True
-                )[:5]
+                negative_reasons_counter = Counter(stats['topNegativeReasons'])
+                top_negative_reasons_with_counts = negative_reasons_counter.most_common(5)
+                stats['topNegativeReasons'] = [
+                    f"{reason} ({count}x)" if count > 1 else reason 
+                    for reason, count in top_negative_reasons_with_counts
+                ]
                 
-                self.category_stats_by_type[product_type][category_name] = {
-                    'category': category_name,
-                    'categoryType': data['category_type'],
-                    'mentions': data['mentions'],
-                    'satisfactionRate': round(satisfaction_rate, 1),
-                    'negativeRate': round(negative_rate, 1),
-                    'positiveCount': positive_count,
-                    'negativeCount': negative_count,
-                    'totalReviews': total_reviews,
-                    'averageRating': round(average_rating, 2),
-                    'topNegativeAspects': [aspect for aspect, count in top_negative_aspects],
-                    'topPositiveAspects': [aspect for aspect, count in top_positive_aspects]  # 新增
-                }
+                # Clean up temporary fields
+                del stats['rating_sum']
+                del stats['rating_count']
     
     def calculate_summary_stats(self):
-        """计算汇总统计数据（按产品类型分开）"""
-        print("正在计算汇总统计...")
-        
+        """Calculate summary statistics by product type"""
         for product_type in ['dimmer', 'light']:
-            stats = self.category_stats_by_type[product_type]
+            categories = self.category_stats_by_type[product_type]
             
-            physical_categories = [cat for cat in stats.values() if cat['categoryType'] == 'Physical']
-            performance_categories = [cat for cat in stats.values() if cat['categoryType'] == 'Performance']
+            if not categories:
+                continue
             
-            all_satisfaction_rates = [cat['satisfactionRate'] for cat in stats.values()]
-            avg_satisfaction = sum(all_satisfaction_rates) / len(all_satisfaction_rates) if all_satisfaction_rates else 0
+            # Filter categories with sufficient data
+            valid_categories = [cat for cat in categories.values() 
+                             if cat['totalReviews'] >= MIN_REVIEWS_FOR_STATS]
+            
+            physical_count = sum(1 for cat in valid_categories if cat['categoryType'] == 'Physical')
+            performance_count = sum(1 for cat in valid_categories if cat['categoryType'] == 'Performance')
+            
+            avg_satisfaction = 0
+            if valid_categories:
+                total_weighted_satisfaction = sum(cat['satisfactionRate'] * cat['totalReviews'] 
+                                                for cat in valid_categories)
+                total_reviews = sum(cat['totalReviews'] for cat in valid_categories)
+                if total_reviews > 0:
+                    avg_satisfaction = round(total_weighted_satisfaction / total_reviews, 1)
             
             self.summary_stats_by_type[product_type] = {
-                'totalCategories': len(stats),
-                'physicalCategories': len(physical_categories),
-                'performanceCategories': len(performance_categories),
-                'avgSatisfactionRate': round(avg_satisfaction, 1),
-                'processingDate': datetime.now().isoformat(),
+                'totalCategories': len(valid_categories),
+                'physicalCategories': physical_count,
+                'performanceCategories': performance_count,
+                'avgSatisfactionRate': avg_satisfaction,
+                'processingDate': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'productType': 'Dimmer Switches' if product_type == 'dimmer' else 'Light Switches'
             }
     
     def get_top_negative_categories(self, product_type: str, limit: int = 10) -> List[Dict]:
-        """获取指定产品类型的Top N负面分类（按绝对负面评价数排序）"""
+        """Get top negative categories by absolute negative count"""
         stats = self.category_stats_by_type[product_type]
-        # 按绝对负面评价数排序（确保数据有统计意义）
         sorted_categories = sorted(
-            [cat for cat in stats.values() if cat['totalReviews'] >= 5],  # 至少5个评价
-            key=lambda x: -x['negativeCount']  # 按绝对负面评价数降序排序
+            [cat for cat in stats.values() if cat['totalReviews'] >= MIN_REVIEWS_FOR_STATS],
+            key=lambda x: -x['negativeCount']
         )
         return sorted_categories[:limit]
     
     def get_top_positive_categories(self, product_type: str, limit: int = 10) -> List[Dict]:
-        """获取指定产品类型的Top N正面分类（按绝对正面评价数排序）"""
+        """Get top positive categories by absolute positive count"""
         stats = self.category_stats_by_type[product_type]
-        # 按绝对正面评价数排序（确保数据有统计意义）
         sorted_categories = sorted(
-            [cat for cat in stats.values() if cat['totalReviews'] >= 5],  # 至少5个评价
-            key=lambda x: -x['positiveCount']  # 按绝对正面评价数降序排序
+            [cat for cat in stats.values() if cat['totalReviews'] >= MIN_REVIEWS_FOR_STATS],
+            key=lambda x: -x['positiveCount']
         )
         return sorted_categories[:limit]
-    
+
+    def resolve_reason_codes(self, reason_codes: str, review_analysis: Dict[str, Any], sentiment_context: str = None) -> List[str]:
+        """
+        Resolve reason codes (like 'a,c,x,y') to actual aspect descriptions
+        
+        Args:
+            reason_codes: Comma-separated reason codes (e.g., 'a,c,x,y')
+            review_analysis: Full review analysis data for this product
+            sentiment_context: '+' or '-' to ensure we only get descriptions from same sentiment
+        
+        Returns:
+            List of human-readable reason descriptions
+        """
+        if reason_codes == '?':
+            return []  # Skip unknown reason codes
+        
+        # Split multiple reason codes and filter out '?'
+        codes = [code.strip() for code in reason_codes.split(',') if code.strip() != '?']
+        if not codes:
+            return []  # Return empty list if only '?' codes
+        
+        resolved_reasons = []
+        
+        # Look through physical and performance sections for aspect descriptions
+        for section_name in ['phy', 'perf']:
+            if section_name not in review_analysis:
+                continue
+            
+            section_data = review_analysis[section_name]
+            for category, aspects in section_data.items():
+                if not isinstance(aspects, dict):
+                    continue
+                
+                for aspect_key, aspect_sentiments in aspects.items():
+                    # Extract the reason code from the aspect key (e.g., "A@description" -> "A")
+                    if '@' in aspect_key:
+                        aspect_code = aspect_key.split('@')[0]
+                        aspect_description = aspect_key.split('@', 1)[1]
+                        
+                        # Check if this aspect code is in our reason codes
+                        if aspect_code.lower() in [code.lower() for code in codes]:
+                            # If sentiment_context is provided, only include if the aspect has that sentiment
+                            if sentiment_context:
+                                if isinstance(aspect_sentiments, dict) and sentiment_context in aspect_sentiments:
+                                    resolved_reasons.append(aspect_description)
+                            else:
+                                # No sentiment context provided, include all matches
+                                resolved_reasons.append(aspect_description)
+        
+        # If we couldn't resolve any codes, return empty list
+        if not resolved_reasons:
+            return []
+        
+        # Return all individual reasons (we'll count and show top ones later)
+        return resolved_reasons
+
     def analyze_use_cases(self):
-        """分析使用场景满意度数据，按产品类型分开处理"""
-        print("正在分析使用场景数据...")
+        """Analyze use case satisfaction data from actual 'use' sections"""
+        print("Analyzing use case satisfaction data...")
+        debug_count = 0
         
-        # 使用场景关键词库 - 基于aspect key和review content
-        use_case_keywords = {
-            'lighting_control': ['dimmer', 'dimming', 'bright', 'light level', 'illumination', 'lighting'],
-            'smart_home': ['smart', 'alexa', 'google', 'voice', 'app', 'wifi', 'automation'],
-            'installation_replacement': ['install', 'replace', 'upgrade', 'wiring', 'electrical'],
-            'appearance_aesthetics': ['look', 'appearance', 'design', 'style', 'color', 'finish'],
-            'functionality_operation': ['work', 'function', 'operate', 'switch', 'control', 'button'],
-            'quality_durability': ['quality', 'durable', 'build', 'material', 'construction', 'solid'],
-            'value_price': ['price', 'cost', 'value', 'cheap', 'expensive', 'worth'],
-            'compatibility_fit': ['fit', 'size', 'compatible', 'standard', 'box', 'gang'],
-            'performance_reliability': ['reliable', 'performance', 'consistent', 'stable', 'work well'],
-            'energy_efficiency': ['energy', 'efficient', 'save', 'power', 'consumption', 'led']
-        }
-        
-        # 为每种产品类型初始化使用场景数据
+        # Initialize use case data by product type
         use_case_data_by_type = {
             'dimmer': defaultdict(lambda: {
                 'total_mentions': 0,
@@ -399,137 +492,139 @@ class CategoryFeedbackAnalyzer:
             })
         }
         
-        # 遍历所有产品
-        for product_id, product_data in self.consolidated_data['results'].items():
-            if product_id not in self.expanded_reviews.get('results', {}):
-                continue
-                
-            # 确定产品类型
+        # Process each product
+        for product_id, product_data in self.consolidated_data.get('results', {}).items():
             if product_id not in self.product_mapping:
                 continue
-                
-            product_type = self.product_mapping[product_id]['type']
-            expanded_product = self.expanded_reviews['results'][product_id]
-            use_case_data = use_case_data_by_type[product_type]
             
-            # 处理phy和perf分类
-            for category_type in ['phy', 'perf']:
-                if category_type not in product_data['aspect_categorization']:
+            product_type = self.product_mapping[product_id]['type']
+            aspect_categorization = product_data.get('aspect_categorization', {})
+            
+            # Get corresponding expanded review data
+            expanded_product = self.expanded_reviews.get('results', {}).get(product_id, {})
+            review_analysis = expanded_product.get('review_analysis', {})
+            
+            # Process 'use' section if available
+            if 'use' not in review_analysis:
+                continue
+            
+            use_reviews = review_analysis['use']
+            use_categorization = aspect_categorization.get('use', {})
+            
+            # Process each use case directly from the review data
+            for use_case, use_case_reviews in use_reviews.items():
+                # Get the final category name from categorization, or use the original name
+                final_category = use_categorization.get(use_case, use_case)
+                if final_category == "OUT_OF_SCOPE":
                     continue
+                
+                # Format the display name properly
+                display_name = final_category.replace('_', ' ').title()
+                
+                use_case_data = use_case_data_by_type[product_type][display_name]
+                
+                # Debug logging for first few products
+                debug_count += 1
+                if debug_count <= 3:
+                    print(f"   Debug {debug_count}: Processing {use_case} -> {display_name} for {product_type}")
+                    print(f"      Sentiments available: {list(use_case_reviews.keys())}")
+                
+                # Process positive and negative sentiments
+                for sentiment in ['+', '-']:
+                    if sentiment not in use_case_reviews:
+                        continue
                     
-                # 遍历aspect groups
-                for aspect_group_name, aspect_group in product_data['aspect_categorization'][category_type].items():
-                    for aspect_key, category_name in aspect_group.items():
-                        if category_name == "OUT_OF_SCOPE":
+                    sentiment_data = use_case_reviews[sentiment]
+                    if not isinstance(sentiment_data, dict):
+                        continue
+                    
+                    # Process each reason and its review objects
+                    for reason, review_objects in sentiment_data.items():
+                        if not isinstance(review_objects, list):
                             continue
-                            
-                        # 查找对应的评价数据
-                        review_analysis = expanded_product.get('review_analysis', {})
-                        if category_type not in review_analysis:
-                            continue
-                            
-                        type_analysis = review_analysis[category_type]
-                        if aspect_group_name not in type_analysis:
-                            continue
-                            
-                        group_analysis = type_analysis[aspect_group_name]
-                        if aspect_key not in group_analysis:
-                            continue
-                            
-                        aspect_reviews = group_analysis[aspect_key]
                         
-                        # 处理正面和负面评价
-                        for sentiment in ['+', '-']:
-                            if sentiment not in aspect_reviews:
+                        # Count each review object once for total mentions
+                        mention_count = len(review_objects)
+                        use_case_data['total_mentions'] += mention_count
+                        
+                        # Resolve reason codes to actual descriptions with sentiment context
+                        clean_reasons = self.resolve_reason_codes(reason, review_analysis, sentiment)
+                        if not clean_reasons:  # Skip empty reasons but still count the reviews
+                            continue
+                        
+                        # Create review data entries from the actual review objects
+                        for review_obj in review_objects:
+                            # Skip invalid review objects
+                            if not isinstance(review_obj, dict):
                                 continue
-                                
-                            reviews_list = aspect_reviews[sentiment]
-                            if not isinstance(reviews_list, list):
-                                continue
-                                
-                            for review in reviews_list:
-                                if not isinstance(review, dict):
-                                    continue
-                                    
-                                # 获取aspect key和review content用于使用场景匹配
-                                review_content = review.get('review', '').lower()
-                                aspect_text = aspect_key.lower()
-                                
-                                # 合并aspect key和review content进行匹配
-                                search_text = f"{aspect_text} {review_content}"
-                                
-                                # 匹配使用场景
-                                for use_case, keywords in use_case_keywords.items():
-                                    matched = False
-                                    for keyword in keywords:
-                                        if keyword.lower() in search_text:
-                                            use_case_data[use_case]['total_mentions'] += 1
-                                            use_case_data[use_case]['related_categories'].add(category_name)
-                                            
-                                            rating_score = self.extract_rating_score(review.get('rating', ''))
-                                            review_data = {
-                                                'rating': rating_score,
-                                                'sentiment': sentiment,
-                                                'aspect_key': aspect_key,
-                                                'category': category_name,
-                                                'product_id': product_id
-                                            }
-                                            
-                                            if sentiment == '+':
-                                                use_case_data[use_case]['positive_reviews'].append(review_data)
-                                                # 提取满意原因
-                                                clean_aspect_text = aspect_key.split('@', 1)[-1] if '@' in aspect_key else aspect_key
-                                                use_case_data[use_case]['satisfaction_reasons'].append(clean_aspect_text)
-                                            elif sentiment == '-':
-                                                use_case_data[use_case]['negative_reviews'].append(review_data)
-                                                # 提取不满意原因
-                                                clean_aspect_text = aspect_key.split('@', 1)[-1] if '@' in aspect_key else aspect_key
-                                                use_case_data[use_case]['gap_reasons'].append(clean_aspect_text)
-                                            matched = True
-                                            break  # 找到匹配就停止
-                                    if matched:
-                                        break  # 避免重复计数
+                            
+                            # Extract rating from the review object
+                            rating_str = review_obj.get('rating', '3.0')
+                            rating = self.extract_rating_score(rating_str)
+                            
+                            # Add ONE entry per review (not per clean_reason) for counting purposes
+                            review_data = {
+                                'rating': rating,
+                                'sentiment': sentiment,
+                                'reason': clean_reasons[0] if clean_reasons else reason,  # Use first clean reason or original
+                                'use_case': use_case,
+                                'product_id': product_id,
+                                'review_id': review_obj.get('review_id', 0),
+                                'review_text': review_obj.get('review_text', '')[:100] + '...'  # Truncated for storage
+                            }
+                            
+                            if sentiment == '+':
+                                use_case_data['positive_reviews'].append(review_data)
+                            else:
+                                use_case_data['negative_reviews'].append(review_data)
+                            
+                            # Add all clean reasons to the reasons lists for analysis
+                            for clean_reason in clean_reasons:
+                                if sentiment == '+':
+                                    use_case_data['satisfaction_reasons'].append(clean_reason)
+                                else:
+                                    use_case_data['gap_reasons'].append(clean_reason)
+                        
         
-        # 计算每种产品类型的使用场景统计指标
-        print("正在计算使用场景统计指标...")
+        # Calculate use case statistics
+        print("Calculating use case statistics...")
         for product_type in ['dimmer', 'light']:
             self.use_case_stats_by_type[product_type] = {}
             use_case_data = use_case_data_by_type[product_type]
             
             for use_case, data in use_case_data.items():
                 total_mentions = data['total_mentions']
-                if total_mentions < 5:  # 至少5个提及
+                if total_mentions < MIN_REVIEWS_FOR_STATS:
                     continue
-                    
+                
                 positive_count = len(data['positive_reviews'])
                 negative_count = len(data['negative_reviews'])
                 
-                # 计算满意度
+                # Calculate satisfaction rate
                 satisfaction_rate = (positive_count / total_mentions) * 100 if total_mentions > 0 else 0
                 
-                # 获取最频繁的满意原因 (最多5个)
+                # Get top satisfaction and gap reasons
                 satisfaction_reasons_count = defaultdict(int)
                 for reason in data['satisfaction_reasons']:
                     satisfaction_reasons_count[reason] += 1
                 
                 top_satisfaction_reasons = sorted(
-                    satisfaction_reasons_count.items(), 
-                    key=lambda x: x[1], 
+                    satisfaction_reasons_count.items(),
+                    key=lambda x: x[1],
                     reverse=True
                 )[:5]
                 
-                # 获取最频繁的不满意原因 (最多5个)
                 gap_reasons_count = defaultdict(int)
                 for reason in data['gap_reasons']:
                     gap_reasons_count[reason] += 1
                 
                 top_gap_reasons = sorted(
-                    gap_reasons_count.items(), 
-                    key=lambda x: x[1], 
+                    gap_reasons_count.items(),
+                    key=lambda x: x[1],
                     reverse=True
                 )[:5]
                 
-                # 格式化使用场景名称
+                # Format use case display name
                 use_case_display = use_case.replace('_', ' ').title()
                 
                 self.use_case_stats_by_type[product_type][use_case] = {
@@ -538,76 +633,81 @@ class CategoryFeedbackAnalyzer:
                     'positiveCount': positive_count,
                     'negativeCount': negative_count,
                     'satisfactionRate': round(satisfaction_rate, 1),
-                    'categoryType': 'Physical',  # 大多数使用场景相关的都是物理特性
-                    'topSatisfactionReasons': [reason for reason, count in top_satisfaction_reasons],
-                    'topGapReasons': [reason for reason, count in top_gap_reasons],
-                    'relatedCategories': list(data['related_categories'])[:5]  # 最多5个相关分类
+                    'categoryType': 'Physical',  # Most use cases relate to physical characteristics
+                    'topSatisfactionReasons': [
+                        f"{reason} ({count}x)" if count > 1 else reason 
+                        for reason, count in top_satisfaction_reasons
+                    ],
+                    'topGapReasons': [
+                        f"{reason} ({count}x)" if count > 1 else reason 
+                        for reason, count in top_gap_reasons
+                    ],
+                    'relatedCategories': list(data['related_categories'])[:5]
                 }
     
     def get_top_use_cases(self, product_type: str, limit: int = 10) -> List[Dict]:
-        """获取指定产品类型的Top N使用场景（按提及次数排序）"""
+        """Get top use cases sorted by total mentions"""
         stats = self.use_case_stats_by_type[product_type]
-        # 按总提及次数排序
         sorted_use_cases = sorted(
             stats.values(),
             key=lambda x: -x['totalMentions']
         )
         return sorted_use_cases[:limit]
-    
+
     def generate_typescript_file(self, output_path: str):
-        """生成TypeScript数据文件（包含两种产品类型的正面和负面数据）"""
-        print(f"正在生成TypeScript文件: {output_path}")
+        """Generate TypeScript data file with actual analyzed data"""
+        print(f"Generating TypeScript file: {output_path}")
         
-        # 获取两种产品类型的Top 10负面分类
+        # Get data for both product types
         top_negative_dimmer = self.get_top_negative_categories('dimmer', 10)
         top_negative_light = self.get_top_negative_categories('light', 10)
         
-        # 获取两种产品类型的Top 10正面分类
         top_positive_dimmer = self.get_top_positive_categories('dimmer', 10)
         top_positive_light = self.get_top_positive_categories('light', 10)
         
-        # 获取两种产品类型的Top 10使用场景
         top_use_cases_dimmer = self.get_top_use_cases('dimmer', 10)
         top_use_cases_light = self.get_top_use_cases('light', 10)
         
-        # 获取所有分类数据
+        # Get all categories data
         all_categories_dimmer = list(self.category_stats_by_type['dimmer'].values())
         all_categories_light = list(self.category_stats_by_type['light'].values())
         
-        # 按负面率排序所有分类
+        # Sort by negative rate
         all_categories_dimmer.sort(key=lambda x: -x['negativeRate'])
         all_categories_light.sort(key=lambda x: -x['negativeRate'])
         
-        # 生成TypeScript代码
-        ts_content = f'''// Category Feedback Analysis Data - 基于产品类型分类的正负面反馈分析
-// 数据来源: consolidated_aspect_categorization.json, expanded_review_results.json, 产品分类数据
-// 生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-// 使用sentiment标记直接判断正负面
+        # Generate TypeScript content
+        ts_content = f'''// Category Feedback Analysis Data - Generated from actual review analysis
+// Data source: {self.data_dir}
+// Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+// Products analyzed: Dimmer={len([p for p in self.product_mapping.values() if p['type'] == 'dimmer'])}, Light={len([p for p in self.product_mapping.values() if p['type'] == 'light'])}
 
 export interface CategoryFeedback {{
-  category: string;                 // 分类名称
-  categoryType: 'Physical' | 'Performance'; // 分类类型
-  mentions: number;                // 总提及次数
-  satisfactionRate: number;        // 满意度百分比
-  negativeRate: number;           // 负面评价比例
-  positiveCount: number;          // 正面评价数
-  negativeCount: number;          // 负面评价数
-  totalReviews: number;           // 总评价数
-  averageRating: number;          // 平均评分
-  topNegativeAspects: string[];   // 主要负面aspect
-  topPositiveAspects: string[];   // 主要正面aspect
+  category: string;
+  categoryType: 'Physical' | 'Performance';
+  mentions: number;
+  satisfactionRate: number;
+  negativeRate: number;
+  positiveCount: number;
+  negativeCount: number;
+  totalReviews: number;
+  averageRating: number;
+  topNegativeAspects: string[];
+  topPositiveAspects: string[];
+  topNegativeReasons: string[];
+  topPositiveReasons: string[];
 }}
 
 export interface UseCaseFeedback {{
-  useCase: string;                    // 使用场景名称
-  totalMentions: number;             // 总提及次数
-  positiveCount: number;             // 正面评价数
-  negativeCount: number;             // 负面评价数
-  satisfactionRate: number;          // 满意度百分比
-  categoryType: 'Physical' | 'Performance'; // 关联的主要分类类型
-  topSatisfactionReasons: string[];  // 满意的原因
-  topGapReasons: string[];          // 不满意的原因/产品缺口
-  relatedCategories: string[];      // 相关的category分类
+  useCase: string;
+  totalMentions: number;
+  positiveCount: number;
+  negativeCount: number;
+  satisfactionRate: number;
+  categoryType: 'Physical' | 'Performance';
+  topSatisfactionReasons: string[];
+  topGapReasons: string[];
+  relatedCategories: string[];
 }}
 
 export interface CategoryFeedbackData {{
@@ -619,29 +719,29 @@ export interface CategoryFeedbackData {{
     processingDate: string;
     productType: string;
   }};
-  topNegativeCategories: CategoryFeedback[];  // Top 10 负面分类
-  topPositiveCategories: CategoryFeedback[];  // Top 10 正面分类
-  topUseCases: UseCaseFeedback[];             // Top 10 使用场景
-  allCategories: CategoryFeedback[];          // 所有分类数据（按负面率排序）
+  topNegativeCategories: CategoryFeedback[];
+  topPositiveCategories: CategoryFeedback[];
+  topUseCases: UseCaseFeedback[];
+  allCategories: CategoryFeedback[];
 }}
 
 export type ProductType = 'dimmer' | 'light';
 
-// Dimmer Switches 数据
+// Dimmer Switches Data
 export const dimmerSwitchesSummary = {json.dumps(self.summary_stats_by_type['dimmer'], indent=2, ensure_ascii=False)};
 export const topNegativeDimmerCategories: CategoryFeedback[] = {json.dumps(top_negative_dimmer, indent=2, ensure_ascii=False)};
 export const topPositiveDimmerCategories: CategoryFeedback[] = {json.dumps(top_positive_dimmer, indent=2, ensure_ascii=False)};
 export const topUseCasesDimmer: UseCaseFeedback[] = {json.dumps(top_use_cases_dimmer, indent=2, ensure_ascii=False)};
 export const allDimmerCategories: CategoryFeedback[] = {json.dumps(all_categories_dimmer, indent=2, ensure_ascii=False)};
 
-// Light Switches 数据
+// Light Switches Data  
 export const lightSwitchesSummary = {json.dumps(self.summary_stats_by_type['light'], indent=2, ensure_ascii=False)};
 export const topNegativeLightCategories: CategoryFeedback[] = {json.dumps(top_negative_light, indent=2, ensure_ascii=False)};
 export const topPositiveLightCategories: CategoryFeedback[] = {json.dumps(top_positive_light, indent=2, ensure_ascii=False)};
 export const topUseCasesLight: UseCaseFeedback[] = {json.dumps(top_use_cases_light, indent=2, ensure_ascii=False)};
 export const allLightCategories: CategoryFeedback[] = {json.dumps(all_categories_light, indent=2, ensure_ascii=False)};
 
-// 获取指定产品类型的分类反馈数据
+// Utility Functions
 export function getCategoryFeedback(productType: ProductType = 'dimmer'): CategoryFeedbackData {{
   if (productType === 'dimmer') {{
     return {{
@@ -662,31 +762,26 @@ export function getCategoryFeedback(productType: ProductType = 'dimmer'): Catego
   }}
 }}
 
-// 获取Top N负面分类
 export function getTopNegativeCategories(productType: ProductType = 'dimmer', limit: number = 10): CategoryFeedback[] {{
   const data = getCategoryFeedback(productType);
   return data.topNegativeCategories.slice(0, limit);
 }}
 
-// 获取Top N正面分类
 export function getTopPositiveCategories(productType: ProductType = 'dimmer', limit: number = 10): CategoryFeedback[] {{
   const data = getCategoryFeedback(productType);
   return data.topPositiveCategories.slice(0, limit);
 }}
 
-// 获取Top N使用场景
 export function getTopUseCases(productType: ProductType = 'dimmer', limit: number = 10): UseCaseFeedback[] {{
   const data = getCategoryFeedback(productType);
   return data.topUseCases.slice(0, limit);
 }}
 
-// 按分类类型筛选
 export function getCategoriesByType(categoryType: 'Physical' | 'Performance', productType: ProductType = 'dimmer'): CategoryFeedback[] {{
   const data = getCategoryFeedback(productType);
   return data.allCategories.filter(cat => cat.categoryType === categoryType);
 }}
 
-// 获取所有可用的产品类型
 export function getAvailableProductTypes(): {{ value: ProductType; label: string }}[] {{
   return [
     {{ value: 'dimmer', label: 'Dimmer Switches' }},
@@ -695,17 +790,19 @@ export function getAvailableProductTypes(): {{ value: ProductType; label: string
 }}
 '''
         
-        # 写入文件
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        # Write file
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(ts_content)
         
-        print(f"✓ 已生成TypeScript文件: {output_path}")
+        print(f"✓ Generated TypeScript file: {output_path}")
     
     def print_analysis_summary(self):
-        """打印分析结果摘要"""
+        """Print analysis results summary"""
         print("\n" + "="*80)
-        print("分析结果摘要 - 按产品类型分开（基于sentiment标记）")
+        print("Category Feedback Analysis Summary - Generated from Actual Data")
         print("="*80)
         
         for product_type in ['dimmer', 'light']:
@@ -713,27 +810,30 @@ export function getAvailableProductTypes(): {{ value: ProductType; label: string
             summary = self.summary_stats_by_type[product_type]
             
             print(f"\n📊 {product_name}:")
-            print(f"总分类数量: {summary['totalCategories']}")
-            print(f"物理分类数量: {summary['physicalCategories']}")
-            print(f"性能分类数量: {summary['performanceCategories']}")
-            print(f"平均满意度: {summary['avgSatisfactionRate']}%")
+            print(f"Total Categories: {summary['totalCategories']}")
+            print(f"Physical Categories: {summary['physicalCategories']}")
+            print(f"Performance Categories: {summary['performanceCategories']}")
+            print(f"Average Satisfaction Rate: {summary['avgSatisfactionRate']}%")
             
-            print(f"\nTop 10 负面分类 (按绝对负面评价数排序):")
-            top_negative = self.get_top_negative_categories(product_type, 10)
+            print(f"\nTop 5 Negative Categories (by negative count):")
+            top_negative = self.get_top_negative_categories(product_type, 5)
             for i, cat in enumerate(top_negative, 1):
-                print(f"{i:2d}. {cat['category']:<30} | 负面评价数: {cat['negativeCount']:3d} | 负面率: {cat['negativeRate']:5.1f}% | 总评价: {cat['totalReviews']:3d}")
+                print(f"{i:2d}. {cat['category']:<35} | Negative: {cat['negativeCount']:3d} | Rate: {cat['negativeRate']:5.1f}% | Total: {cat['totalReviews']:3d}")
             
-            print(f"\nTop 10 正面分类 (按绝对正面评价数排序):")
-            top_positive = self.get_top_positive_categories(product_type, 10)
+            print(f"\nTop 5 Positive Categories (by positive count):")
+            top_positive = self.get_top_positive_categories(product_type, 5)
             for i, cat in enumerate(top_positive, 1):
-                print(f"{i:2d}. {cat['category']:<30} | 正面评价数: {cat['positiveCount']:3d} | 正面率: {cat['satisfactionRate']:5.1f}% | 总评价: {cat['totalReviews']:3d}")
+                print(f"{i:2d}. {cat['category']:<35} | Positive: {cat['positiveCount']:3d} | Rate: {cat['satisfactionRate']:5.1f}% | Total: {cat['totalReviews']:3d}")
+            
+            print(f"\nTop 5 Use Cases (by mention count):")
+            top_use_cases = self.get_top_use_cases(product_type, 5)
+            for i, uc in enumerate(top_use_cases, 1):
+                print(f"{i:2d}. {uc['useCase']:<35} | Mentions: {uc['totalMentions']:3d} | Satisfaction: {uc['satisfactionRate']:5.1f}%")
             
             print("-" * 80)
-        
-        print("\n" + "="*80)
     
     def run(self, output_path: str):
-        """运行完整的分析流程"""
+        """Run the complete analysis pipeline"""
         try:
             self.load_data()
             self.analyze_categories()
@@ -742,29 +842,26 @@ export function getAvailableProductTypes(): {{ value: ProductType; label: string
             self.generate_typescript_file(output_path)
             self.print_analysis_summary()
             
-            print(f"\n✅ 分析完成！数据已保存到: {output_path}")
+            print(f"\n✅ Analysis complete! TypeScript data generated at: {output_path}")
             
         except Exception as e:
-            print(f"\n❌ 分析过程中出现错误: {str(e)}")
+            print(f"\n❌ Analysis failed: {str(e)}")
             raise
 
 
 def main():
-    """主函数"""
-    # 设置路径
-    current_dir = Path(__file__).parent.parent.parent  # backend/
-    data_dir = current_dir / "data/result/process_review/20250609_05"
-    output_path = current_dir.parent / "frontend/lib/categoryFeedback.ts"  # frontend/lib/
+    """Main execution function"""
+    # Set up paths
     
-    print("Category Feedback Analyzer - 按产品类型分开分析")
+    print("Category Feedback Analyzer - Reading from Actual Generated Data")
     print("="*70)
-    print(f"数据目录: {data_dir}")
-    print(f"输出文件: {output_path}")
+    print(f"Data directory: {DATA_DIR}")
+    print(f"Output file: {OUTPUT_PATH}")
     print()
     
-    # 运行分析
-    analyzer = CategoryFeedbackAnalyzer(str(data_dir))
-    analyzer.run(str(output_path))
+    # Run analysis
+    analyzer = CategoryFeedbackAnalyzer(str(DATA_DIR))
+    analyzer.run(str(OUTPUT_PATH))
 
 
 if __name__ == "__main__":

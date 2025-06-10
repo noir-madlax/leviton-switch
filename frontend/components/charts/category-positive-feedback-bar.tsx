@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CategoryFeedback, ProductType, getAvailableProductTypes } from '@/lib/categoryFeedback'
+import { getSatisfactionColor, SatisfactionLegend } from '@/lib/satisfactionColors'
 
 interface CategoryPositiveFeedbackBarProps {
   data: CategoryFeedback[]
@@ -24,10 +25,18 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="text-sm text-green-600">Satisfaction Rate: {data.satisfactionRate}%</p>
         <p className="text-sm text-orange-600">Negative Rate: {data.negativeRate}%</p>
         <div className="mt-2">
-          <p className="text-xs text-gray-500">Top Strengths:</p>
+          <p className="text-xs text-gray-500">Top Strength Details:</p>
           {data.topPositiveAspects && data.topPositiveAspects.slice(0, 3).map((aspect: string, index: number) => (
             <p key={index} className="text-xs text-gray-600">• {aspect}</p>
           ))}
+          {data.topPositiveReasons && data.topPositiveReasons.length > 0 && (
+            <div className="mt-2">
+              <p className="text-xs text-gray-500">Top Strength Reasons:</p>
+              {data.topPositiveReasons.slice(0, 3).map((reason: string, index: number) => (
+                <p key={index} className="text-xs text-green-600">• {reason}</p>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     )
@@ -44,13 +53,9 @@ export function CategoryPositiveFeedbackBar({ data, productType = 'dimmer', onPr
     setSelectedProductType(productType)
   }, [productType])
 
-  // 根据正面评价数量计算颜色 - 绿色渐变（正面评价数越多颜色越深）
-  const getBarColor = (positiveCount: number) => {
-    if (positiveCount >= 100) return '#059669'     // 深绿色 - 100+正面评价
-    if (positiveCount >= 60) return '#10b981'      // 绿色 - 60-99正面评价
-    if (positiveCount >= 40) return '#34d399'      // 中绿色 - 40-59正面评价
-    if (positiveCount >= 20) return '#6ee7b7'      // 浅绿色 - 20-39正面评价
-    return '#a7f3d0'                              // 很浅绿色 - 1-19正面评价
+  // Use satisfaction rate for consistent coloring across all charts
+  const getBarColor = (item: CategoryFeedback) => {
+    return getSatisfactionColor(item.satisfactionRate)
   }
 
   // 数据已经按正面评价数排序，直接使用前10个
@@ -68,24 +73,7 @@ export function CategoryPositiveFeedbackBar({ data, productType = 'dimmer', onPr
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Top 10 Customer Strengths by Category
-          <div className="flex items-center gap-2 text-sm">
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-green-700 rounded"></div>
-              <span className="text-xs">Excellent (100+)</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-green-600 rounded"></div>
-              <span className="text-xs">Very Good (60-99)</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-green-400 rounded"></div>
-              <span className="text-xs">Good (40-59)</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-green-300 rounded"></div>
-              <span className="text-xs">Satisfactory (20-39)</span>
-            </div>
-          </div>
+          <SatisfactionLegend />
         </CardTitle>
         <div className="flex items-center justify-between">
           <CardDescription>Categories ranked by absolute positive review count</CardDescription>
@@ -141,7 +129,7 @@ export function CategoryPositiveFeedbackBar({ data, productType = 'dimmer', onPr
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="positiveCount" radius={[4, 4, 0, 0]}>
                 {filteredData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={getBarColor(entry.positiveCount)} />
+                  <Cell key={`cell-${index}`} fill={getBarColor(entry)} />
                 ))}
               </Bar>
             </BarChart>
@@ -152,14 +140,14 @@ export function CategoryPositiveFeedbackBar({ data, productType = 'dimmer', onPr
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
           {filteredData.slice(0, 4).map((item, index) => (
             <div key={index} className="text-center">
-              <div className="text-lg font-bold" style={{color: getBarColor(item.positiveCount)}}>
+              <div className="text-lg font-bold" style={{color: getBarColor(item)}}>
                 {item.positiveCount}
               </div>
               <div className="text-sm text-gray-600 truncate" title={item.category}>
                 {item.category}
               </div>
-              <div className="text-xs text-green-600">
-                positive reviews
+              <div className="text-xs" style={{color: getBarColor(item)}}>
+                {item.satisfactionRate}% satisfaction
               </div>
             </div>
           ))}

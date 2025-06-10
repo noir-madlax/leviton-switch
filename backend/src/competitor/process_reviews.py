@@ -195,6 +195,36 @@ def validate_review_ids(ids: Any, expected_review_ids: Set[int]) -> Tuple[bool, 
     
     return len(errors) == 0, "; ".join(errors)
 
+def validate_sentiment_consistency(reason_codes: str, current_sentiment: str, aspect_sentiments: Dict[str, Set[str]], context: str) -> List[str]:
+    """
+    Validate that referenced reason codes have consistent sentiment with current context
+    
+    Args:
+        reason_codes: Comma/semicolon-separated reason codes (e.g., 'A,b,c')
+        current_sentiment: Current sentiment context ('+' or '-')
+        aspect_sentiments: Dict mapping aspect codes to their available sentiments
+        context: Context string for error reporting
+    
+    Returns:
+        List of error messages
+    """
+    errors = []
+    
+    if reason_codes == "?":
+        return errors  # Unknown reasons are ok
+    
+    # Split by comma
+    reason_parts = [r.strip() for r in reason_codes.split(',') if r.strip()]
+    
+    for reason_code in reason_parts:
+        if reason_code in aspect_sentiments:
+            available_sentiments = aspect_sentiments[reason_code]
+            if current_sentiment not in available_sentiments:
+                available_str = ', '.join(sorted(available_sentiments))
+                errors.append(f"Sentiment mismatch in {context}: reason '{reason_code}' only has sentiments [{available_str}] but is referenced in '{current_sentiment}' context")
+    
+    return errors
+
 def validate_hierarchy_structure(result: Dict[str, Any], expected_review_ids: Set[int]) -> Tuple[bool, List[str]]:
     """
     Validate the hierarchical review extraction JSON structure
@@ -218,6 +248,27 @@ def validate_hierarchy_structure(result: Dict[str, Any], expected_review_ids: Se
         if not isinstance(result[section], dict):
             errors.append(f"Section '{section}' must be a JSON object containing aspect categories, got {type(result[section]).__name__}")
             continue
+    
+    # First pass: collect all aspects and their available sentiments for cross-reference validation
+    aspect_sentiments = {}  # {aspect_code: {'+', '-'}} - tracks which sentiments each aspect has
+    
+    # Collect from 'phy' section
+    if 'phy' in result and isinstance(result['phy'], dict):
+        for physical, details in result['phy'].items():
+            if isinstance(details, dict):
+                for pid_detail, sentiments in details.items():
+                    if '@' in pid_detail and isinstance(sentiments, dict):
+                        pid = pid_detail.split('@', 1)[0]
+                        aspect_sentiments[pid] = set(sentiments.keys())
+    
+    # Collect from 'perf' section
+    if 'perf' in result and isinstance(result['perf'], dict):
+        for perf, details in result['perf'].items():
+            if isinstance(details, dict):
+                for perf_id_detail, sentiments in details.items():
+                    if '@' in perf_id_detail and isinstance(sentiments, dict):
+                        perf_id = perf_id_detail.split('@', 1)[0]
+                        aspect_sentiments[perf_id] = set(sentiments.keys())
     
     # Validate 'phy' section
     if 'phy' in result and isinstance(result['phy'], dict):
@@ -281,7 +332,7 @@ def validate_hierarchy_structure(result: Dict[str, Any], expected_review_ids: Se
                         # Validate reason format (PID, perf_id, "?", or comma-separated like "F,p")
                         if reason != "?":
                             # Split by comma and validate each part
-                            reason_parts = [r.strip() for r in reason.split(',')]
+                            reason_parts = [r.strip() for r in reason.split(',') if r.strip()]
                             invalid_parts = []
                             for part in reason_parts:
                                 if not (validate_id_format(part, 'PID') or validate_id_format(part, 'perf_id')):
@@ -289,6 +340,13 @@ def validate_hierarchy_structure(result: Dict[str, Any], expected_review_ids: Se
                             
                             if invalid_parts:
                                 errors.append(f"Invalid reason format '{reason}' - invalid parts: {invalid_parts}. Each part must be PID, perf_id, or '?'")
+                        
+                        # Validate sentiment consistency
+                        sentiment_errors = validate_sentiment_consistency(
+                            reason, sent, aspect_sentiments, 
+                            f"{perf_id_detail}[{sent}][{reason}]"
+                        )
+                        errors.extend(sentiment_errors)
                         
                         is_valid, id_error = validate_review_ids(ids, expected_review_ids)
                         if not is_valid:
@@ -313,7 +371,7 @@ def validate_hierarchy_structure(result: Dict[str, Any], expected_review_ids: Se
                     # Validate reason format (PID, perf_id, "?", or comma-separated like "F,p")
                     if reason != "?":
                         # Split by comma and validate each part
-                        reason_parts = [r.strip() for r in reason.split(',')]
+                        reason_parts = [r.strip() for r in reason.split(',') if r.strip()]
                         invalid_parts = []
                         for part in reason_parts:
                             if not (validate_id_format(part, 'PID') or validate_id_format(part, 'perf_id')):
@@ -321,6 +379,13 @@ def validate_hierarchy_structure(result: Dict[str, Any], expected_review_ids: Se
                         
                         if invalid_parts:
                             errors.append(f"Invalid reason format '{reason}' - invalid parts: {invalid_parts}. Each part must be PID, perf_id, or '?'")
+                    
+                    # Validate sentiment consistency
+                    sentiment_errors = validate_sentiment_consistency(
+                        reason, sent, aspect_sentiments, 
+                        f"{use}[{sent}][{reason}]"
+                    )
+                    errors.extend(sentiment_errors)
                     
                     is_valid, id_error = validate_review_ids(ids, expected_review_ids)
                     if not is_valid:
