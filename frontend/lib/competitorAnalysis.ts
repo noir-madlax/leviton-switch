@@ -1,17 +1,28 @@
-// Competitor Analysis Data - 6个竞争产品的痛点对比分析
-// 数据来源: consolidated_aspect_categorization.json, expanded_review_results.json
-// 生成时间: 2025-06-10 22:50:59
-// 分析产品: Leviton D26HD, D215S, Lutron Caseta Diva, TP Link Switch, Leviton DSL06, Lutron Diva
+// Competitor Analysis Data - 6 product competitive pain point analysis (including all products)
+// Data source: consolidated_aspect_categorization.json, expanded_review_results.json
+// Generated: 2025-06-10 19:25:19
+// Products analyzed: Leviton D26HD, D215S, Lutron Caseta Diva, TP Link Switch, Leviton DSL06, Lutron Diva (including all products)
 
 export interface ProductPainPoint {
-  product: string;                    // 产品名称
-  category: string;                   // 分类名称
-  categoryType: 'Physical' | 'Performance'; // 分类类型
-  mentions: number;                   // 提及次数 (用于气泡大小)
-  satisfactionRate: number;           // 满意度百分比 (用于颜色)
-  positiveCount: number;              // 正面评价数
-  negativeCount: number;              // 负面评价数
-  totalReviews: number;               // 总评价数
+  product: string;                    // Product name
+  category: string;                   // Category name
+  categoryType: 'Physical' | 'Performance'; // Category type
+  mentions: number;                   // Mention count (for bubble size)
+  satisfactionRate: number;           // Satisfaction percentage (for color)
+  positiveCount: number;              // Positive review count
+  negativeCount: number;              // Negative review count
+  totalReviews: number;               // Total review count
+}
+
+export interface ProductUseCaseData {
+  product: string;
+  useCase: string;
+  mentions: number;
+  satisfactionRate: number;
+  positiveCount: number;
+  negativeCount: number;
+  totalReviews: number;
+  gapLevel: number; // From actual analysis data
 }
 
 export interface CompetitorAnalysisData {
@@ -23,14 +34,14 @@ export interface CompetitorAnalysisData {
     processingDate: string;
     description: string;
   };
-  matrixData: ProductPainPoint[];        // 完整矩阵数据
-  physicalData: ProductPainPoint[];     // 物理特性数据
-  performanceData: ProductPainPoint[];  // 性能特性数据
-  targetProducts: string[];             // 目标产品列表
-  productTotalReviews: Record<string, number>; // 每个产品的实际总评论数
+  matrixData: ProductPainPoint[];        // Complete matrix data
+  physicalData: ProductPainPoint[];     // Physical characteristics data
+  performanceData: ProductPainPoint[];  // Performance characteristics data
+  targetProducts: string[];             // Target product list
+  productTotalReviews: Record<string, number>; // Actual total review count per product
 }
 
-// 目标产品列表
+// Target product list (including all 6 products)
 export const targetProducts = [
   "Leviton D26HD",
   "Leviton D215S",
@@ -40,7 +51,7 @@ export const targetProducts = [
   "Lutron Diva"
 ];
 
-// 每个产品的实际总评论数
+// Actual total review count per product
 export const productTotalReviews = {
   "Leviton D26HD": 19,
   "Leviton D215S": 38,
@@ -49,30 +60,20 @@ export const productTotalReviews = {
   "Lutron Diva": 42
 };
 
-// 汇总统计数据
+// Summary statistics
 export const competitorSummary = {
   "totalProducts": 6,
   "totalDataPoints": 92,
-  "totalMentions": 211,
+  "totalMentions": 63,
   "avgSatisfactionRate": 56.1,
-  "processingDate": "2025-06-10T22:50:59.765689",
-  "description": "6 product competitive pain points analysis"
+  "processingDate": "2025-06-10T19:25:19.663418",
+  "description": "6 product competitive pain points analysis including all target products"
 };
 
-// 完整痛点矩阵数据
+// Complete pain point matrix data
 export const competitorMatrixData: ProductPainPoint[] = [
   {
     "product": "Leviton D26HD",
-    "category": "Build Quality and Materials",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
     "category": "Size and Fit",
     "categoryType": "Physical",
     "mentions": 0,
@@ -83,7 +84,7 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D26HD",
-    "category": "Electrical Wiring",
+    "category": "Build Quality and Materials",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -113,56 +114,6 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D26HD",
-    "category": "Tactile and Audio Feedback",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Switch Plate Design",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Slider Mechanisms",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Visual Indicator Lights",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Mounting and Installation Hardware",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
     "category": "LED Indicator and Lighting Features",
     "categoryType": "Physical",
     "mentions": 1,
@@ -173,17 +124,7 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D26HD",
-    "category": "Cover Plates and Faceplates",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Construction Quality",
+    "category": "Mounting and Installation Hardware",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -203,7 +144,7 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D26HD",
-    "category": "Visual Appearance",
+    "category": "Construction Quality",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -213,7 +154,7 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D26HD",
-    "category": "Dimmer Controls",
+    "category": "Tactile and Audio Feedback",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -223,103 +164,13 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D26HD",
-    "category": "Tactile Feedback",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 1,
-    "negativeCount": 0,
-    "totalReviews": 1
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Packaging and Documentation",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 1,
-    "negativeCount": 0,
-    "totalReviews": 1
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Faceplate and Cover Components",
+    "category": "Switch Plate Design",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
     "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Internal Electronics and Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Installation Fit",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Material Quality",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Wiring Connections",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Button Operation",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Specialized Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Build Quality and Materials",
-    "categoryType": "Physical",
-    "mentions": 3,
-    "satisfactionRate": 33.3,
-    "positiveCount": 1,
-    "negativeCount": 2,
-    "totalReviews": 3
   },
   {
     "product": "Leviton D215S",
@@ -333,13 +184,13 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D215S",
-    "category": "Electrical Wiring",
+    "category": "Build Quality and Materials",
     "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
+    "mentions": 3,
+    "satisfactionRate": 33.3,
+    "positiveCount": 1,
+    "negativeCount": 2,
+    "totalReviews": 3
   },
   {
     "product": "Leviton D215S",
@@ -363,37 +214,7 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D215S",
-    "category": "Tactile and Audio Feedback",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Switch Plate Design",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Slider Mechanisms",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Visual Indicator Lights",
+    "category": "LED Indicator and Lighting Features",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -413,17 +234,7 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D215S",
-    "category": "LED Indicator and Lighting Features",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Cover Plates and Faceplates",
+    "category": "Visual Appearance and Aesthetics",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -443,7 +254,7 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D215S",
-    "category": "Visual Appearance and Aesthetics",
+    "category": "Tactile and Audio Feedback",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -453,117 +264,7 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D215S",
-    "category": "Visual Appearance",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Dimmer Controls",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Tactile Feedback",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Packaging and Documentation",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Faceplate and Cover Components",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 1,
-    "negativeCount": 0,
-    "totalReviews": 1
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Internal Electronics and Components",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 1,
-    "totalReviews": 1
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Installation Fit",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Material Quality",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Wiring Connections",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Button Operation",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Specialized Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Build Quality and Materials",
+    "category": "Switch Plate Design",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -583,13 +284,13 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Lutron Caseta Diva",
-    "category": "Electrical Wiring",
+    "category": "Build Quality and Materials",
     "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 7,
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
     "negativeCount": 0,
-    "totalReviews": 7
+    "totalReviews": 0
   },
   {
     "product": "Lutron Caseta Diva",
@@ -613,43 +314,13 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Lutron Caseta Diva",
-    "category": "Tactile and Audio Feedback",
+    "category": "LED Indicator and Lighting Features",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
     "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Switch Plate Design",
-    "categoryType": "Physical",
-    "mentions": 2,
-    "satisfactionRate": 100.0,
-    "positiveCount": 4,
-    "negativeCount": 0,
-    "totalReviews": 4
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Slider Mechanisms",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 4,
-    "negativeCount": 0,
-    "totalReviews": 4
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Visual Indicator Lights",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 4,
-    "negativeCount": 0,
-    "totalReviews": 4
   },
   {
     "product": "Lutron Caseta Diva",
@@ -663,23 +334,13 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Lutron Caseta Diva",
-    "category": "LED Indicator and Lighting Features",
+    "category": "Visual Appearance and Aesthetics",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
     "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Cover Plates and Faceplates",
-    "categoryType": "Physical",
-    "mentions": 2,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 3,
-    "totalReviews": 3
   },
   {
     "product": "Lutron Caseta Diva",
@@ -693,7 +354,7 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Lutron Caseta Diva",
-    "category": "Visual Appearance and Aesthetics",
+    "category": "Tactile and Audio Feedback",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -703,123 +364,13 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Lutron Caseta Diva",
-    "category": "Visual Appearance",
+    "category": "Switch Plate Design",
     "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
+    "mentions": 2,
+    "satisfactionRate": 100.0,
+    "positiveCount": 4,
     "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Dimmer Controls",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Tactile Feedback",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Packaging and Documentation",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Faceplate and Cover Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Internal Electronics and Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Installation Fit",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 1,
-    "totalReviews": 1
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Material Quality",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Wiring Connections",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Button Operation",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Specialized Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Build Quality and Materials",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
+    "totalReviews": 4
   },
   {
     "product": "TP Link Switch",
@@ -833,7 +384,7 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "TP Link Switch",
-    "category": "Electrical Wiring",
+    "category": "Build Quality and Materials",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -863,56 +414,6 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "TP Link Switch",
-    "category": "Tactile and Audio Feedback",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Switch Plate Design",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Slider Mechanisms",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Visual Indicator Lights",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Mounting and Installation Hardware",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
     "category": "LED Indicator and Lighting Features",
     "categoryType": "Physical",
     "mentions": 2,
@@ -923,17 +424,7 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "TP Link Switch",
-    "category": "Cover Plates and Faceplates",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Construction Quality",
+    "category": "Mounting and Installation Hardware",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -953,7 +444,7 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "TP Link Switch",
-    "category": "Visual Appearance",
+    "category": "Construction Quality",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -963,7 +454,7 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "TP Link Switch",
-    "category": "Dimmer Controls",
+    "category": "Tactile and Audio Feedback",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -973,7 +464,7 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "TP Link Switch",
-    "category": "Tactile Feedback",
+    "category": "Switch Plate Design",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -982,8 +473,8 @@ export const competitorMatrixData: ProductPainPoint[] = [
     "totalReviews": 0
   },
   {
-    "product": "TP Link Switch",
-    "category": "Packaging and Documentation",
+    "product": "Leviton DSL06",
+    "category": "Size and Fit",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -992,84 +483,94 @@ export const competitorMatrixData: ProductPainPoint[] = [
     "totalReviews": 0
   },
   {
-    "product": "TP Link Switch",
-    "category": "Faceplate and Cover Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Internal Electronics and Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Installation Fit",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Material Quality",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 1,
-    "totalReviews": 1
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Wiring Connections",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 1,
-    "totalReviews": 1
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Button Operation",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 1,
-    "totalReviews": 1
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Specialized Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
+    "product": "Leviton DSL06",
     "category": "Build Quality and Materials",
     "categoryType": "Physical",
-    "mentions": 6,
-    "satisfactionRate": 50.0,
-    "positiveCount": 4,
-    "negativeCount": 4,
-    "totalReviews": 8
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "Wiring Configuration and Connections",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "Visual Aesthetics",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "LED Indicator and Lighting Features",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "Mounting and Installation Hardware",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "Visual Appearance and Aesthetics",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "Construction Quality",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "Tactile and Audio Feedback",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "Switch Plate Design",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
   },
   {
     "product": "Lutron Diva",
@@ -1083,13 +584,13 @@ export const competitorMatrixData: ProductPainPoint[] = [
   },
   {
     "product": "Lutron Diva",
-    "category": "Electrical Wiring",
+    "category": "Build Quality and Materials",
     "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
+    "mentions": 6,
+    "satisfactionRate": 50.0,
+    "positiveCount": 4,
+    "negativeCount": 4,
+    "totalReviews": 8
   },
   {
     "product": "Lutron Diva",
@@ -1110,6 +611,46 @@ export const competitorMatrixData: ProductPainPoint[] = [
     "positiveCount": 4,
     "negativeCount": 0,
     "totalReviews": 4
+  },
+  {
+    "product": "Lutron Diva",
+    "category": "LED Indicator and Lighting Features",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Lutron Diva",
+    "category": "Mounting and Installation Hardware",
+    "categoryType": "Physical",
+    "mentions": 2,
+    "satisfactionRate": 50.0,
+    "positiveCount": 1,
+    "negativeCount": 1,
+    "totalReviews": 2
+  },
+  {
+    "product": "Lutron Diva",
+    "category": "Visual Appearance and Aesthetics",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Lutron Diva",
+    "category": "Construction Quality",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
   },
   {
     "product": "Lutron Diva",
@@ -1130,203 +671,13 @@ export const competitorMatrixData: ProductPainPoint[] = [
     "positiveCount": 0,
     "negativeCount": 0,
     "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Slider Mechanisms",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Visual Indicator Lights",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Mounting and Installation Hardware",
-    "categoryType": "Physical",
-    "mentions": 2,
-    "satisfactionRate": 50.0,
-    "positiveCount": 1,
-    "negativeCount": 1,
-    "totalReviews": 2
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "LED Indicator and Lighting Features",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Cover Plates and Faceplates",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Construction Quality",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Visual Appearance and Aesthetics",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Visual Appearance",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 2,
-    "negativeCount": 0,
-    "totalReviews": 2
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Dimmer Controls",
-    "categoryType": "Physical",
-    "mentions": 2,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 2,
-    "totalReviews": 2
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Tactile Feedback",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Packaging and Documentation",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Faceplate and Cover Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Internal Electronics and Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Installation Fit",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Material Quality",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Wiring Connections",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Button Operation",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Specialized Components",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 1,
-    "negativeCount": 0,
-    "totalReviews": 1
   }
 ];
 
-// 物理特性痛点数据
+// Physical characteristics pain point data
 export const physicalPainPoints: ProductPainPoint[] = [
   {
     "product": "Leviton D26HD",
-    "category": "Build Quality and Materials",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
     "category": "Size and Fit",
     "categoryType": "Physical",
     "mentions": 0,
@@ -1337,7 +688,7 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D26HD",
-    "category": "Electrical Wiring",
+    "category": "Build Quality and Materials",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -1367,56 +718,6 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D26HD",
-    "category": "Tactile and Audio Feedback",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Switch Plate Design",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Slider Mechanisms",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Visual Indicator Lights",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Mounting and Installation Hardware",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
     "category": "LED Indicator and Lighting Features",
     "categoryType": "Physical",
     "mentions": 1,
@@ -1427,17 +728,7 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D26HD",
-    "category": "Cover Plates and Faceplates",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Construction Quality",
+    "category": "Mounting and Installation Hardware",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -1457,7 +748,7 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D26HD",
-    "category": "Visual Appearance",
+    "category": "Construction Quality",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -1467,7 +758,7 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D26HD",
-    "category": "Dimmer Controls",
+    "category": "Tactile and Audio Feedback",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -1477,103 +768,13 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D26HD",
-    "category": "Tactile Feedback",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 1,
-    "negativeCount": 0,
-    "totalReviews": 1
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Packaging and Documentation",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 1,
-    "negativeCount": 0,
-    "totalReviews": 1
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Faceplate and Cover Components",
+    "category": "Switch Plate Design",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
     "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Internal Electronics and Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Installation Fit",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Material Quality",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Wiring Connections",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Button Operation",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D26HD",
-    "category": "Specialized Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Build Quality and Materials",
-    "categoryType": "Physical",
-    "mentions": 3,
-    "satisfactionRate": 33.3,
-    "positiveCount": 1,
-    "negativeCount": 2,
-    "totalReviews": 3
   },
   {
     "product": "Leviton D215S",
@@ -1587,13 +788,13 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D215S",
-    "category": "Electrical Wiring",
+    "category": "Build Quality and Materials",
     "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
+    "mentions": 3,
+    "satisfactionRate": 33.3,
+    "positiveCount": 1,
+    "negativeCount": 2,
+    "totalReviews": 3
   },
   {
     "product": "Leviton D215S",
@@ -1617,37 +818,7 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D215S",
-    "category": "Tactile and Audio Feedback",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Switch Plate Design",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Slider Mechanisms",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Visual Indicator Lights",
+    "category": "LED Indicator and Lighting Features",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -1667,17 +838,7 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D215S",
-    "category": "LED Indicator and Lighting Features",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Cover Plates and Faceplates",
+    "category": "Visual Appearance and Aesthetics",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -1697,7 +858,7 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D215S",
-    "category": "Visual Appearance and Aesthetics",
+    "category": "Tactile and Audio Feedback",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -1707,117 +868,7 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Leviton D215S",
-    "category": "Visual Appearance",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Dimmer Controls",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Tactile Feedback",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Packaging and Documentation",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Faceplate and Cover Components",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 1,
-    "negativeCount": 0,
-    "totalReviews": 1
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Internal Electronics and Components",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 1,
-    "totalReviews": 1
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Installation Fit",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Material Quality",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Wiring Connections",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Button Operation",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Leviton D215S",
-    "category": "Specialized Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Build Quality and Materials",
+    "category": "Switch Plate Design",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -1837,13 +888,13 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Lutron Caseta Diva",
-    "category": "Electrical Wiring",
+    "category": "Build Quality and Materials",
     "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 7,
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
     "negativeCount": 0,
-    "totalReviews": 7
+    "totalReviews": 0
   },
   {
     "product": "Lutron Caseta Diva",
@@ -1867,43 +918,13 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Lutron Caseta Diva",
-    "category": "Tactile and Audio Feedback",
+    "category": "LED Indicator and Lighting Features",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
     "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Switch Plate Design",
-    "categoryType": "Physical",
-    "mentions": 2,
-    "satisfactionRate": 100.0,
-    "positiveCount": 4,
-    "negativeCount": 0,
-    "totalReviews": 4
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Slider Mechanisms",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 4,
-    "negativeCount": 0,
-    "totalReviews": 4
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Visual Indicator Lights",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 4,
-    "negativeCount": 0,
-    "totalReviews": 4
   },
   {
     "product": "Lutron Caseta Diva",
@@ -1917,23 +938,13 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Lutron Caseta Diva",
-    "category": "LED Indicator and Lighting Features",
+    "category": "Visual Appearance and Aesthetics",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
     "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Cover Plates and Faceplates",
-    "categoryType": "Physical",
-    "mentions": 2,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 3,
-    "totalReviews": 3
   },
   {
     "product": "Lutron Caseta Diva",
@@ -1947,7 +958,7 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Lutron Caseta Diva",
-    "category": "Visual Appearance and Aesthetics",
+    "category": "Tactile and Audio Feedback",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -1957,123 +968,13 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Lutron Caseta Diva",
-    "category": "Visual Appearance",
+    "category": "Switch Plate Design",
     "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
+    "mentions": 2,
+    "satisfactionRate": 100.0,
+    "positiveCount": 4,
     "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Dimmer Controls",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Tactile Feedback",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Packaging and Documentation",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Faceplate and Cover Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Internal Electronics and Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Installation Fit",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 1,
-    "totalReviews": 1
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Material Quality",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Wiring Connections",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Button Operation",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "category": "Specialized Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Build Quality and Materials",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
+    "totalReviews": 4
   },
   {
     "product": "TP Link Switch",
@@ -2087,7 +988,7 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "TP Link Switch",
-    "category": "Electrical Wiring",
+    "category": "Build Quality and Materials",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -2117,56 +1018,6 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "TP Link Switch",
-    "category": "Tactile and Audio Feedback",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Switch Plate Design",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Slider Mechanisms",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Visual Indicator Lights",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Mounting and Installation Hardware",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
     "category": "LED Indicator and Lighting Features",
     "categoryType": "Physical",
     "mentions": 2,
@@ -2177,17 +1028,7 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "TP Link Switch",
-    "category": "Cover Plates and Faceplates",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Construction Quality",
+    "category": "Mounting and Installation Hardware",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -2207,7 +1048,7 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "TP Link Switch",
-    "category": "Visual Appearance",
+    "category": "Construction Quality",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -2217,7 +1058,7 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "TP Link Switch",
-    "category": "Dimmer Controls",
+    "category": "Tactile and Audio Feedback",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -2227,7 +1068,7 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "TP Link Switch",
-    "category": "Tactile Feedback",
+    "category": "Switch Plate Design",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -2236,8 +1077,8 @@ export const physicalPainPoints: ProductPainPoint[] = [
     "totalReviews": 0
   },
   {
-    "product": "TP Link Switch",
-    "category": "Packaging and Documentation",
+    "product": "Leviton DSL06",
+    "category": "Size and Fit",
     "categoryType": "Physical",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -2246,84 +1087,94 @@ export const physicalPainPoints: ProductPainPoint[] = [
     "totalReviews": 0
   },
   {
-    "product": "TP Link Switch",
-    "category": "Faceplate and Cover Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Internal Electronics and Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Installation Fit",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Material Quality",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 1,
-    "totalReviews": 1
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Wiring Connections",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 1,
-    "totalReviews": 1
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Button Operation",
-    "categoryType": "Physical",
-    "mentions": 1,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 1,
-    "totalReviews": 1
-  },
-  {
-    "product": "TP Link Switch",
-    "category": "Specialized Components",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
+    "product": "Leviton DSL06",
     "category": "Build Quality and Materials",
     "categoryType": "Physical",
-    "mentions": 6,
-    "satisfactionRate": 50.0,
-    "positiveCount": 4,
-    "negativeCount": 4,
-    "totalReviews": 8
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "Wiring Configuration and Connections",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "Visual Aesthetics",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "LED Indicator and Lighting Features",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "Mounting and Installation Hardware",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "Visual Appearance and Aesthetics",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "Construction Quality",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "Tactile and Audio Feedback",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Leviton DSL06",
+    "category": "Switch Plate Design",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
   },
   {
     "product": "Lutron Diva",
@@ -2337,13 +1188,13 @@ export const physicalPainPoints: ProductPainPoint[] = [
   },
   {
     "product": "Lutron Diva",
-    "category": "Electrical Wiring",
+    "category": "Build Quality and Materials",
     "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
+    "mentions": 6,
+    "satisfactionRate": 50.0,
+    "positiveCount": 4,
+    "negativeCount": 4,
+    "totalReviews": 8
   },
   {
     "product": "Lutron Diva",
@@ -2364,6 +1215,46 @@ export const physicalPainPoints: ProductPainPoint[] = [
     "positiveCount": 4,
     "negativeCount": 0,
     "totalReviews": 4
+  },
+  {
+    "product": "Lutron Diva",
+    "category": "LED Indicator and Lighting Features",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Lutron Diva",
+    "category": "Mounting and Installation Hardware",
+    "categoryType": "Physical",
+    "mentions": 2,
+    "satisfactionRate": 50.0,
+    "positiveCount": 1,
+    "negativeCount": 1,
+    "totalReviews": 2
+  },
+  {
+    "product": "Lutron Diva",
+    "category": "Visual Appearance and Aesthetics",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
+  },
+  {
+    "product": "Lutron Diva",
+    "category": "Construction Quality",
+    "categoryType": "Physical",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0
   },
   {
     "product": "Lutron Diva",
@@ -2384,193 +1275,617 @@ export const physicalPainPoints: ProductPainPoint[] = [
     "positiveCount": 0,
     "negativeCount": 0,
     "totalReviews": 0
-  },
+  }
+];
+
+// Performance characteristics pain point data
+export const performancePainPoints: ProductPainPoint[] = [];
+
+// Use case matrix data
+export const useCaseMatrixData: ProductUseCaseData[] = [
   {
-    "product": "Lutron Diva",
-    "category": "Slider Mechanisms",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Visual Indicator Lights",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Mounting and Installation Hardware",
-    "categoryType": "Physical",
+    "product": "Leviton D26HD",
+    "useCase": "Scheduling and Automation",
     "mentions": 2,
-    "satisfactionRate": 50.0,
+    "satisfactionRate": 100.0,
+    "positiveCount": 2,
+    "negativeCount": 0,
+    "totalReviews": 2,
+    "gapLevel": 0.0
+  },
+  {
+    "product": "Leviton D26HD",
+    "useCase": "Smart Home Integration",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton D26HD",
+    "useCase": "Smart Home Automation",
+    "mentions": 3,
+    "satisfactionRate": 100.0,
+    "positiveCount": 6,
+    "negativeCount": 0,
+    "totalReviews": 6,
+    "gapLevel": 0.0
+  },
+  {
+    "product": "Leviton D26HD",
+    "useCase": "Outdoor and Security Lighting",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton D26HD",
+    "useCase": "Remote and Mobile Control",
+    "mentions": 1,
+    "satisfactionRate": 100.0,
     "positiveCount": 1,
-    "negativeCount": 1,
-    "totalReviews": 2
+    "negativeCount": 0,
+    "totalReviews": 1,
+    "gapLevel": 0.0
   },
   {
-    "product": "Lutron Diva",
-    "category": "LED Indicator and Lighting Features",
-    "categoryType": "Physical",
+    "product": "Leviton D26HD",
+    "useCase": "Kitchen Applications",
+    "mentions": 1,
+    "satisfactionRate": 100.0,
+    "positiveCount": 1,
+    "negativeCount": 0,
+    "totalReviews": 1,
+    "gapLevel": 0.0
+  },
+  {
+    "product": "Leviton D26HD",
+    "useCase": "Recessed and Can Lighting",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
-    "totalReviews": 0
+    "totalReviews": 0,
+    "gapLevel": 100.0
   },
   {
-    "product": "Lutron Diva",
-    "category": "Cover Plates and Faceplates",
-    "categoryType": "Physical",
+    "product": "Leviton D26HD",
+    "useCase": "LED Lighting Integration",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
-    "totalReviews": 0
+    "totalReviews": 0,
+    "gapLevel": 100.0
   },
   {
-    "product": "Lutron Diva",
-    "category": "Construction Quality",
-    "categoryType": "Physical",
+    "product": "Leviton D26HD",
+    "useCase": "Complex Wiring Configurations",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
-    "totalReviews": 0
+    "totalReviews": 0,
+    "gapLevel": 100.0
   },
   {
-    "product": "Lutron Diva",
-    "category": "Visual Appearance and Aesthetics",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Visual Appearance",
-    "categoryType": "Physical",
+    "product": "Leviton D26HD",
+    "useCase": "Outdoor Lighting Control",
     "mentions": 1,
     "satisfactionRate": 100.0,
     "positiveCount": 2,
     "negativeCount": 0,
-    "totalReviews": 2
+    "totalReviews": 2,
+    "gapLevel": 0.0
   },
   {
-    "product": "Lutron Diva",
-    "category": "Dimmer Controls",
-    "categoryType": "Physical",
+    "product": "Leviton D215S",
+    "useCase": "Scheduling and Automation",
+    "mentions": 1,
+    "satisfactionRate": 100.0,
+    "positiveCount": 9,
+    "negativeCount": 0,
+    "totalReviews": 9,
+    "gapLevel": 0.0
+  },
+  {
+    "product": "Leviton D215S",
+    "useCase": "Smart Home Integration",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton D215S",
+    "useCase": "Smart Home Automation",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton D215S",
+    "useCase": "Outdoor and Security Lighting",
     "mentions": 2,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 2,
-    "totalReviews": 2
+    "satisfactionRate": 100.0,
+    "positiveCount": 3,
+    "negativeCount": 0,
+    "totalReviews": 3,
+    "gapLevel": 0.0
   },
   {
-    "product": "Lutron Diva",
-    "category": "Tactile Feedback",
-    "categoryType": "Physical",
+    "product": "Leviton D215S",
+    "useCase": "Remote and Mobile Control",
+    "mentions": 1,
+    "satisfactionRate": 100.0,
+    "positiveCount": 5,
+    "negativeCount": 0,
+    "totalReviews": 5,
+    "gapLevel": 0.0
+  },
+  {
+    "product": "Leviton D215S",
+    "useCase": "Kitchen Applications",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
-    "totalReviews": 0
+    "totalReviews": 0,
+    "gapLevel": 100.0
   },
   {
-    "product": "Lutron Diva",
-    "category": "Packaging and Documentation",
-    "categoryType": "Physical",
+    "product": "Leviton D215S",
+    "useCase": "Recessed and Can Lighting",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
-    "totalReviews": 0
+    "totalReviews": 0,
+    "gapLevel": 100.0
   },
   {
-    "product": "Lutron Diva",
-    "category": "Faceplate and Cover Components",
-    "categoryType": "Physical",
+    "product": "Leviton D215S",
+    "useCase": "LED Lighting Integration",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
-    "totalReviews": 0
+    "totalReviews": 0,
+    "gapLevel": 100.0
   },
   {
-    "product": "Lutron Diva",
-    "category": "Internal Electronics and Components",
-    "categoryType": "Physical",
+    "product": "Leviton D215S",
+    "useCase": "Complex Wiring Configurations",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
-    "totalReviews": 0
+    "totalReviews": 0,
+    "gapLevel": 100.0
   },
   {
-    "product": "Lutron Diva",
-    "category": "Installation Fit",
-    "categoryType": "Physical",
+    "product": "Leviton D215S",
+    "useCase": "Outdoor Lighting Control",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
-    "totalReviews": 0
+    "totalReviews": 0,
+    "gapLevel": 100.0
   },
   {
-    "product": "Lutron Diva",
-    "category": "Material Quality",
-    "categoryType": "Physical",
+    "product": "Lutron Caseta Diva",
+    "useCase": "Scheduling and Automation",
+    "mentions": 1,
+    "satisfactionRate": 66.7,
+    "positiveCount": 2,
+    "negativeCount": 1,
+    "totalReviews": 3,
+    "gapLevel": 33.3
+  },
+  {
+    "product": "Lutron Caseta Diva",
+    "useCase": "Smart Home Integration",
+    "mentions": 1,
+    "satisfactionRate": 83.3,
+    "positiveCount": 5,
+    "negativeCount": 1,
+    "totalReviews": 6,
+    "gapLevel": 16.7
+  },
+  {
+    "product": "Lutron Caseta Diva",
+    "useCase": "Smart Home Automation",
+    "mentions": 1,
+    "satisfactionRate": 100.0,
+    "positiveCount": 3,
+    "negativeCount": 0,
+    "totalReviews": 3,
+    "gapLevel": 0.0
+  },
+  {
+    "product": "Lutron Caseta Diva",
+    "useCase": "Outdoor and Security Lighting",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
-    "totalReviews": 0
+    "totalReviews": 0,
+    "gapLevel": 100.0
   },
   {
-    "product": "Lutron Diva",
-    "category": "Wiring Connections",
-    "categoryType": "Physical",
+    "product": "Lutron Caseta Diva",
+    "useCase": "Remote and Mobile Control",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
     "negativeCount": 0,
-    "totalReviews": 0
+    "totalReviews": 0,
+    "gapLevel": 100.0
   },
   {
-    "product": "Lutron Diva",
-    "category": "Button Operation",
-    "categoryType": "Physical",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0
-  },
-  {
-    "product": "Lutron Diva",
-    "category": "Specialized Components",
-    "categoryType": "Physical",
+    "product": "Lutron Caseta Diva",
+    "useCase": "Kitchen Applications",
     "mentions": 1,
     "satisfactionRate": 100.0,
     "positiveCount": 1,
     "negativeCount": 0,
-    "totalReviews": 1
+    "totalReviews": 1,
+    "gapLevel": 0.0
+  },
+  {
+    "product": "Lutron Caseta Diva",
+    "useCase": "Recessed and Can Lighting",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Lutron Caseta Diva",
+    "useCase": "LED Lighting Integration",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Lutron Caseta Diva",
+    "useCase": "Complex Wiring Configurations",
+    "mentions": 1,
+    "satisfactionRate": 100.0,
+    "positiveCount": 2,
+    "negativeCount": 0,
+    "totalReviews": 2,
+    "gapLevel": 0.0
+  },
+  {
+    "product": "Lutron Caseta Diva",
+    "useCase": "Outdoor Lighting Control",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "TP Link Switch",
+    "useCase": "Scheduling and Automation",
+    "mentions": 1,
+    "satisfactionRate": 100.0,
+    "positiveCount": 3,
+    "negativeCount": 0,
+    "totalReviews": 3,
+    "gapLevel": 0.0
+  },
+  {
+    "product": "TP Link Switch",
+    "useCase": "Smart Home Integration",
+    "mentions": 2,
+    "satisfactionRate": 85.7,
+    "positiveCount": 12,
+    "negativeCount": 2,
+    "totalReviews": 14,
+    "gapLevel": 14.3
+  },
+  {
+    "product": "TP Link Switch",
+    "useCase": "Smart Home Automation",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "TP Link Switch",
+    "useCase": "Outdoor and Security Lighting",
+    "mentions": 1,
+    "satisfactionRate": 100.0,
+    "positiveCount": 3,
+    "negativeCount": 0,
+    "totalReviews": 3,
+    "gapLevel": 0.0
+  },
+  {
+    "product": "TP Link Switch",
+    "useCase": "Remote and Mobile Control",
+    "mentions": 1,
+    "satisfactionRate": 100.0,
+    "positiveCount": 3,
+    "negativeCount": 0,
+    "totalReviews": 3,
+    "gapLevel": 0.0
+  },
+  {
+    "product": "TP Link Switch",
+    "useCase": "Kitchen Applications",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "TP Link Switch",
+    "useCase": "Recessed and Can Lighting",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "TP Link Switch",
+    "useCase": "LED Lighting Integration",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "TP Link Switch",
+    "useCase": "Complex Wiring Configurations",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "TP Link Switch",
+    "useCase": "Outdoor Lighting Control",
+    "mentions": 1,
+    "satisfactionRate": 50.0,
+    "positiveCount": 1,
+    "negativeCount": 1,
+    "totalReviews": 2,
+    "gapLevel": 50.0
+  },
+  {
+    "product": "Leviton DSL06",
+    "useCase": "Scheduling and Automation",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton DSL06",
+    "useCase": "Smart Home Integration",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton DSL06",
+    "useCase": "Smart Home Automation",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton DSL06",
+    "useCase": "Outdoor and Security Lighting",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton DSL06",
+    "useCase": "Remote and Mobile Control",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton DSL06",
+    "useCase": "Kitchen Applications",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton DSL06",
+    "useCase": "Recessed and Can Lighting",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton DSL06",
+    "useCase": "LED Lighting Integration",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton DSL06",
+    "useCase": "Complex Wiring Configurations",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton DSL06",
+    "useCase": "Outdoor Lighting Control",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Lutron Diva",
+    "useCase": "Scheduling and Automation",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Lutron Diva",
+    "useCase": "Smart Home Integration",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Lutron Diva",
+    "useCase": "Smart Home Automation",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Lutron Diva",
+    "useCase": "Outdoor and Security Lighting",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Lutron Diva",
+    "useCase": "Remote and Mobile Control",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Lutron Diva",
+    "useCase": "Kitchen Applications",
+    "mentions": 1,
+    "satisfactionRate": 100.0,
+    "positiveCount": 1,
+    "negativeCount": 0,
+    "totalReviews": 1,
+    "gapLevel": 0.0
+  },
+  {
+    "product": "Lutron Diva",
+    "useCase": "Recessed and Can Lighting",
+    "mentions": 2,
+    "satisfactionRate": 100.0,
+    "positiveCount": 2,
+    "negativeCount": 0,
+    "totalReviews": 2,
+    "gapLevel": 0.0
+  },
+  {
+    "product": "Lutron Diva",
+    "useCase": "LED Lighting Integration",
+    "mentions": 2,
+    "satisfactionRate": 50.0,
+    "positiveCount": 1,
+    "negativeCount": 1,
+    "totalReviews": 2,
+    "gapLevel": 50.0
+  },
+  {
+    "product": "Lutron Diva",
+    "useCase": "Complex Wiring Configurations",
+    "mentions": 1,
+    "satisfactionRate": 50.0,
+    "positiveCount": 1,
+    "negativeCount": 1,
+    "totalReviews": 2,
+    "gapLevel": 50.0
+  },
+  {
+    "product": "Lutron Diva",
+    "useCase": "Outdoor Lighting Control",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
   }
 ];
 
-// 性能特性痛点数据
-export const performancePainPoints: ProductPainPoint[] = [];
-
-// 获取竞争品分析数据
+// Get competitor analysis data
 export function getCompetitorAnalysisData(): CompetitorAnalysisData {
   return {
     summary: competitorSummary,
@@ -2582,36 +1897,49 @@ export function getCompetitorAnalysisData(): CompetitorAnalysisData {
   };
 }
 
-// 获取指定产品的痛点数据
+// Get use case analysis data
+export function getUseCaseAnalysisData(): {
+  matrixData: ProductUseCaseData[];
+  targetProducts: string[];
+  productTotalReviews: Record<string, number>;
+} {
+  return {
+    matrixData: useCaseMatrixData,
+    targetProducts: targetProducts,
+    productTotalReviews: productTotalReviews
+  };
+}
+
+// Get pain point data for specified product
 export function getProductPainPoints(productName: string): ProductPainPoint[] {
   return competitorMatrixData.filter(item => item.product === productName);
 }
 
-// 获取指定分类的所有产品数据
+// Get all product data for specified category
 export function getCategoryComparisonData(categoryName: string): ProductPainPoint[] {
   return competitorMatrixData.filter(item => item.category === categoryName);
 }
 
-// 获取所有分类列表
+// Get all category list
 export function getAllCategories(): string[] {
   const categories = new Set(competitorMatrixData.map(item => item.category));
   return Array.from(categories).sort();
 }
 
-// 获取按分类类型筛选的数据
+// Get data filtered by category type
 export function getDataByType(categoryType: 'Physical' | 'Performance'): ProductPainPoint[] {
   return competitorMatrixData.filter(item => item.categoryType === categoryType);
 }
 
-// 计算满意度颜色映射 (用于气泡图颜色)
+// Calculate satisfaction color mapping (for matrix display)
 export function getSatisfactionColor(satisfactionRate: number): string {
-  if (satisfactionRate >= 80) return '#22c55e';      // 绿色 - 高满意度
-  else if (satisfactionRate >= 60) return '#eab308'; // 黄色 - 中等满意度
-  else if (satisfactionRate >= 40) return '#f97316'; // 橙色 - 较低满意度
-  else return '#ef4444';                              // 红色 - 低满意度
+  if (satisfactionRate >= 85) return '#22c55e';      // Green - high satisfaction
+  else if (satisfactionRate >= 70) return '#eab308'; // Yellow - medium satisfaction
+  else if (satisfactionRate >= 60) return '#f97316'; // Orange - lower satisfaction
+  else return '#ef4444';                              // Red - low satisfaction
 }
 
-// 计算气泡大小映射
+// Calculate bubble size mapping
 export function getBubbleSize(mentions: number, maxMentions: number): number {
   const minSize = 10;
   const maxSize = 50;

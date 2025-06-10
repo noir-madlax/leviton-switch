@@ -37,7 +37,7 @@ export function ReviewInsights() {
       {/* 分类正面反馈分析 */}
       <section>
         <h2 className="text-2xl font-bold text-gray-800 border-l-4 border-green-500 pl-4 mb-6">
-          ⭐ Customer Strengths by Category
+          ⭐ Customer Delights by Category
         </h2>
 
         <CategoryPositiveFeedbackBar 

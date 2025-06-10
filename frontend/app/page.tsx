@@ -25,8 +25,8 @@ export default async function Home() {
           <Tabs defaultValue="market-analysis" className="mt-6">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="market-analysis">Market Analysis</TabsTrigger>
-              <TabsTrigger value="review-insights">Review Insights</TabsTrigger>
-              <TabsTrigger value="competitor-analysis">Competitor Analysis</TabsTrigger>
+              <TabsTrigger value="review-insights">Review Insights by Product Category</TabsTrigger>
+              <TabsTrigger value="competitor-analysis">Focal Products Analysis</TabsTrigger>
             </TabsList>
             
             <TabsContent value="market-analysis" className="mt-6">

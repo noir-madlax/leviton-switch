@@ -72,7 +72,7 @@ export function CategoryPositiveFeedbackBar({ data, productType = 'dimmer', onPr
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          Top 10 Customer Strengths by Category
+          Top 10 Customer Delights by Category
           <SatisfactionLegend />
         </CardTitle>
         <div className="flex items-center justify-between">

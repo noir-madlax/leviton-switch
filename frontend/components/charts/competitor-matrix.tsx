@@ -2,23 +2,23 @@
 
 import { useMemo } from "react"
 
-interface UseCaseData {
+interface MatrixData {
   product: string;
-  useCase: string;
+  category: string;
+  categoryType: 'Physical' | 'Performance';
   mentions: number;
   satisfactionRate: number;
   positiveCount: number;
   negativeCount: number;
   totalReviews: number;
-  gapLevel: number;
 }
 
-interface UseCaseMatrixProps {
-  data: UseCaseData[];
+interface CompetitorMatrixProps {
+  data: MatrixData[];
   targetProducts: string[];
 }
 
-export function MissedOpportunitiesMatrix({ data, targetProducts }: UseCaseMatrixProps) {
+export function CompetitorMatrix({ data, targetProducts }: CompetitorMatrixProps) {
   const orderedProducts = useMemo(() => {
     // Group Leviton products first, then others
     const levitonProducts = targetProducts.filter(product => product.startsWith('Leviton'))
@@ -26,35 +26,39 @@ export function MissedOpportunitiesMatrix({ data, targetProducts }: UseCaseMatri
     return [...levitonProducts, ...otherProducts]
   }, [targetProducts])
 
-  const useCaseMatrixData = useMemo(() => {
-    // Get use cases in the order they appear in the data (already ranked by backend)
-    const useCaseOrder: string[] = []
-    const seenUseCases = new Set<string>()
+  const matrixData = useMemo(() => {
+    // Get categories in the order they appear in the data (already ranked by backend)
+    const categoryOrder: string[] = []
+    const seenCategories = new Set<string>()
     
-    // Preserve the order from the first product (use cases are ranked by average mention ratio)
+    // Preserve the order from the first product (categories are ranked by average mention ratio)
     const firstProduct = orderedProducts[0]
     data.filter(item => item.product === firstProduct).forEach(item => {
-      if (!seenUseCases.has(item.useCase)) {
-        useCaseOrder.push(item.useCase)
-        seenUseCases.add(item.useCase)
+      if (!seenCategories.has(item.category)) {
+        categoryOrder.push(item.category)
+        seenCategories.add(item.category)
       }
     })
     
-    // Add any remaining use cases that might not be in the first product
+    // Add any remaining categories that might not be in the first product
     data.forEach(item => {
-      if (!seenUseCases.has(item.useCase)) {
-        useCaseOrder.push(item.useCase)
-        seenUseCases.add(item.useCase)
+      if (!seenCategories.has(item.category)) {
+        categoryOrder.push(item.category)
+        seenCategories.add(item.category)
       }
     })
     
     // Create matrix structure preserving the ranked order
-    const matrix = useCaseOrder.map(useCase => {
-      const row = { useCase, cells: {} as Record<string, UseCaseData | null> }
+    const matrix = categoryOrder.map(category => {
+      const row = { category, categoryType: '', cells: {} as Record<string, MatrixData | null> }
       
-      // Fill cells for each product in the ordered list
+      // Find category type
+      const categoryData = data.find(item => item.category === category)
+      row.categoryType = categoryData?.categoryType || 'Physical'
+      
+      // Fill cells for each product in the new order
       orderedProducts.forEach(product => {
-        const cellData = data.find(item => item.product === product && item.useCase === useCase)
+        const cellData = data.find(item => item.product === product && item.category === category)
         row.cells[product] = cellData || null
       })
       
@@ -93,7 +97,7 @@ export function MissedOpportunitiesMatrix({ data, targetProducts }: UseCaseMatri
           <thead>
             <tr className="bg-gray-50">
               <th className="border border-gray-300 p-3 text-left font-semibold text-gray-900 min-w-[250px]">
-                Use Cases
+                Category Dimensions
               </th>
               {orderedProducts.map(product => (
                 <th key={product} className={`border border-gray-300 p-3 text-center font-semibold min-w-[140px] ${getHeaderColor(product)}`}>
@@ -103,11 +107,14 @@ export function MissedOpportunitiesMatrix({ data, targetProducts }: UseCaseMatri
             </tr>
           </thead>
           <tbody>
-            {useCaseMatrixData.map((row) => (
-              <tr key={row.useCase}>
+            {matrixData.map((row) => (
+              <tr key={row.category}>
                 <td className="border border-gray-300 p-3 bg-gray-50 font-medium text-gray-900">
                   <div className="flex flex-col">
-                    <span className="text-sm">{row.useCase}</span>
+                    <span className="text-sm">{row.category}</span>
+                    <span className="text-xs text-gray-500 mt-1">
+                      {row.categoryType}
+                    </span>
                   </div>
                 </td>
                 {orderedProducts.map(product => {
