@@ -1,6 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from 'recharts'
+import { MetricTypeSelector, type MetricType } from "@/components/metric-type-selector"
 
 interface PackagePreferenceData {
   sameProductComparison: {
@@ -34,151 +36,86 @@ interface PackagePreferenceData {
 }
 
 export function PackagePreferenceAnalysis({ data }: { data: PackagePreferenceData }) {
-  if (!data || (!data.dimmerSwitches && !data.packageDistribution)) {
-    return <div>Loading Package Preference Analysis...</div>
+  const [metricType, setMetricType] = useState<MetricType>("revenue")
+
+  // Gentle, pastel color palette
+  const colors = [
+    '#A8D5BA', // Soft mint green
+    '#F4C2A1', // Warm peach
+    '#B8C5D6', // Soft lavender blue
+    '#F7D794', // Gentle yellow
+    '#E8A4C9', // Soft pink
+    '#C7D2CC', // Sage green
+    '#F2E2CE', // Cream beige
+    '#D4B5D4'  // Light purple
+  ]
+
+  // Transform data based on selected metric
+  const getDimmerChartData = () => {
+    return data.dimmerSwitches.map(item => ({
+      name: item.packSize,
+      value: metricType === "revenue" ? item.salesRevenue : item.salesVolume,
+      percentage: item.percentage
+    }))
   }
 
-  // Use the new separate data if available, otherwise fall back to the old structure
-  const dimmerSwitches = data.dimmerSwitches || [];
-  const lightSwitches = data.lightSwitches || [];
+  const getSwitchChartData = () => {
+    return data.lightSwitches.map(item => ({
+      name: item.packSize,
+      value: metricType === "revenue" ? item.salesRevenue : item.salesVolume,
+      percentage: item.percentage
+    }))
+  }
 
-  // If no separate data, create from packageDistribution (for backward compatibility)
-  const dimmerData = dimmerSwitches.length > 0 ? dimmerSwitches : 
-    (data.packageDistribution || []).map(item => ({
-      ...item,
-      salesRevenue: Math.round(item.salesVolume * 0.6 * 25)
-    }));
+  const formatValue = (value: number) => {
+    return metricType === "revenue" ? `$${value.toLocaleString()}` : value.toLocaleString()
+  }
 
-  const lightData = lightSwitches.length > 0 ? lightSwitches :
-    (data.packageDistribution || []).map(item => ({
-      ...item,
-      salesRevenue: Math.round(item.salesVolume * 0.4 * 15)
-    }));
+  const titleSuffix = metricType === "revenue" ? "Revenue" : "Volume (Packages Sold)"
+  const valueLabel = metricType === "revenue" ? "Revenue ($)" : "Volume (Packages Sold)"
 
-  // Create individual pack size data by breaking down the grouped ranges
-  const createIndividualPackData = (packageDistribution: any[]) => {
-    const individualPacks = [];
-    
-    // 1 Pack stays as is
-    const onePack = packageDistribution.find(item => item.packSize === "1 Pack");
-    if (onePack) {
-      individualPacks.push({
-        packSize: "1 Pack",
-        count: onePack.count,
-        percentage: onePack.percentage,
-        salesVolume: onePack.salesVolume,
-        salesRevenue: onePack.salesRevenue || Math.round(onePack.salesVolume * 20)
-      });
-    }
-    
-    // Break down 2-3 Pack into individual packs
-    const twoThreePack = packageDistribution.find(item => item.packSize === "2-3 Pack");
-    if (twoThreePack) {
-      individualPacks.push({
-        packSize: "2 Pack",
-        count: Math.round(twoThreePack.count * 0.6),
-        percentage: Math.round(twoThreePack.percentage * 0.6 * 10) / 10,
-        salesVolume: Math.round(twoThreePack.salesVolume * 0.6),
-        salesRevenue: Math.round((twoThreePack.salesRevenue || twoThreePack.salesVolume * 20) * 0.6)
-      });
-      individualPacks.push({
-        packSize: "3 Pack",
-        count: Math.round(twoThreePack.count * 0.4),
-        percentage: Math.round(twoThreePack.percentage * 0.4 * 10) / 10,
-        salesVolume: Math.round(twoThreePack.salesVolume * 0.4),
-        salesRevenue: Math.round((twoThreePack.salesRevenue || twoThreePack.salesVolume * 20) * 0.4)
-      });
-    }
-    
-    // Break down 4-9 Pack into key sizes
-    const fourNinePack = packageDistribution.find(item => item.packSize === "4-9 Pack");
-    if (fourNinePack) {
-      individualPacks.push({
-        packSize: "4 Pack",
-        count: Math.round(fourNinePack.count * 0.4),
-        percentage: Math.round(fourNinePack.percentage * 0.4 * 10) / 10,
-        salesVolume: Math.round(fourNinePack.salesVolume * 0.4),
-        salesRevenue: Math.round((fourNinePack.salesRevenue || fourNinePack.salesVolume * 20) * 0.4)
-      });
-      individualPacks.push({
-        packSize: "6 Pack",
-        count: Math.round(fourNinePack.count * 0.35),
-        percentage: Math.round(fourNinePack.percentage * 0.35 * 10) / 10,
-        salesVolume: Math.round(fourNinePack.salesVolume * 0.35),
-        salesRevenue: Math.round((fourNinePack.salesRevenue || fourNinePack.salesVolume * 20) * 0.35)
-      });
-      individualPacks.push({
-        packSize: "8 Pack",
-        count: Math.round(fourNinePack.count * 0.25),
-        percentage: Math.round(fourNinePack.percentage * 0.25 * 10) / 10,
-        salesVolume: Math.round(fourNinePack.salesVolume * 0.25),
-        salesRevenue: Math.round((fourNinePack.salesRevenue || fourNinePack.salesVolume * 20) * 0.25)
-      });
-    }
-    
-    // Break down 10+ Pack into key sizes
-    const tenPlusPack = packageDistribution.find(item => item.packSize === "10+ Pack");
-    if (tenPlusPack) {
-      individualPacks.push({
-        packSize: "10 Pack",
-        count: Math.round(tenPlusPack.count * 0.5),
-        percentage: Math.round(tenPlusPack.percentage * 0.5 * 10) / 10,
-        salesVolume: Math.round(tenPlusPack.salesVolume * 0.5),
-        salesRevenue: Math.round((tenPlusPack.salesRevenue || tenPlusPack.salesVolume * 20) * 0.5)
-      });
-      individualPacks.push({
-        packSize: "15 Pack",
-        count: Math.round(tenPlusPack.count * 0.3),
-        percentage: Math.round(tenPlusPack.percentage * 0.3 * 10) / 10,
-        salesVolume: Math.round(tenPlusPack.salesVolume * 0.3),
-        salesRevenue: Math.round((tenPlusPack.salesRevenue || tenPlusPack.salesVolume * 20) * 0.3)
-      });
-      individualPacks.push({
-        packSize: "20 Pack",
-        count: Math.round(tenPlusPack.count * 0.2),
-        percentage: Math.round(tenPlusPack.percentage * 0.2 * 10) / 10,
-        salesVolume: Math.round(tenPlusPack.salesVolume * 0.2),
-        salesRevenue: Math.round((tenPlusPack.salesRevenue || tenPlusPack.salesVolume * 20) * 0.2)
-      });
-    }
-    
-    return individualPacks;
-  };
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }: any) => {
+    const RADIAN = Math.PI / 180
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+    const x = cx + radius * Math.cos(-midAngle * RADIAN)
+    const y = cy + radius * Math.sin(-midAngle * RADIAN)
 
-  const individualDimmerData = createIndividualPackData(dimmerData);
-  const individualLightData = createIndividualPackData(lightData);
+    if (percent < 0.05) return null // Don't show labels for slices < 5%
 
-  const PIE_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8dd1e1'];
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill="white" 
+        textAnchor={x > cx ? 'start' : 'end'} 
+        dominantBaseline="central"
+        fontSize="12"
+        fontWeight="bold"
+        style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.7)' }}
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    )
+  }
 
-  const PieTooltip = ({ active, payload }: any) => {
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
-        <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
-          <p className="font-semibold">{`${data.packSize}`}</p>
-          <p className="text-blue-600">{`Product Count: ${data.count}`}</p>
-          <p className="text-green-600">{`Sales Revenue: $${data.salesRevenue.toLocaleString()}`}</p>
-          <p className="text-gray-600">{`Share: ${data.percentage}%`}</p>
+        <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg">
+          <p className="font-semibold text-gray-800">{`Package Size: ${label}`}</p>
+          <p className="text-blue-600">
+            {metricType === "revenue" ? "Revenue: " : "Packages Sold: "}
+            <span className="font-medium">{formatValue(data.value)}</span>
+          </p>
+          <p className="text-green-600">
+            Percentage: <span className="font-medium">{data.percentage.toFixed(1)}%</span>
+          </p>
         </div>
       )
     }
     return null
-  }
-
-  const CustomLegend = ({ payload }: any) => {
-    return (
-      <div className="flex flex-wrap justify-center gap-2 mt-4">
-        {payload.map((entry: any, index: number) => (
-          <div key={`item-${index}`} className="flex items-center gap-1">
-            <div 
-              className="w-3 h-3 rounded" 
-              style={{ backgroundColor: entry.payload.fill }}
-            ></div>
-            <span className="text-sm text-gray-600">{entry.payload.packSize}</span>
-          </div>
-        ))}
-      </div>
-    )
   }
 
   return (
@@ -186,70 +123,89 @@ export function PackagePreferenceAnalysis({ data }: { data: PackagePreferenceDat
       <h2 className="text-2xl font-bold text-gray-800 border-l-4 border-blue-500 pl-4 mb-6">
         📦 Package Preference Analysis
       </h2>
-      
-      <div className="mb-6">
-      </div>
 
-      <div className="space-y-8">
-        {/* Chart 1: Dimmer Switches Revenue Distribution */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-700">
-            💡 Dimmer Switches - Sales Revenue Distribution
-          </h3>
-          <div className="h-80">
+      <MetricTypeSelector onChange={setMetricType} value={metricType} />
+
+      <h3 className="text-xl font-semibold mb-4">Package Size Distribution by {titleSuffix}</h3>
+      
+      {/* Clarification note */}
+      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+        <div className="flex">
+          <div className="ml-3">
+            <p className="text-sm text-blue-700">
+              <strong>Note:</strong> {metricType === "revenue" ? 
+                "Revenue shows total sales value for each package size." : 
+                "Volume shows the number of packages sold (not individual units). For example, if 10 customers buy a '2 Pack', the volume would be 10 packages sold, representing 20 individual units total."
+              }
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Dimmer Switches Pie Chart */}
+        <div className="bg-gray-50 p-6 rounded-lg">
+          <h4 className="text-lg font-medium mb-4 text-center">🔆 Dimmer Switches - Package Size by {titleSuffix}</h4>
+          <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={individualDimmerData.map((item, index) => ({
-                    ...item,
-                    fill: PIE_COLORS[index % PIE_COLORS.length]
-                  }))}
+                  data={getDimmerChartData()}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ packSize, percentage }) => `${packSize}: ${percentage}%`}
-                  outerRadius={100}
+                  label={renderCustomizedLabel}
+                  outerRadius={120}
                   fill="#8884d8"
-                  dataKey="percentage"
+                  dataKey="value"
                 >
-                  {individualDimmerData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  {getDimmerChartData().map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                   ))}
                 </Pie>
-                <Tooltip content={<PieTooltip />} />
-                <Legend content={<CustomLegend />} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  formatter={(value, entry) => {
+                    const item = getDimmerChartData().find(d => d.name === value)
+                    return `${value} (${item?.percentage.toFixed(1)}%)`
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Chart 2: Light Switches Revenue Distribution */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-700">
-            🔌 Light Switches - Sales Revenue Distribution
-          </h3>
-          <div className="h-80">
+        {/* Light Switches Pie Chart */}
+        <div className="bg-gray-50 p-6 rounded-lg">
+          <h4 className="text-lg font-medium mb-4 text-center">💡 Light Switches - Package Size by {titleSuffix}</h4>
+          <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={individualLightData.map((item, index) => ({
-                    ...item,
-                    fill: PIE_COLORS[index % PIE_COLORS.length]
-                  }))}
+                  data={getSwitchChartData()}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ packSize, percentage }) => `${packSize}: ${percentage}%`}
-                  outerRadius={100}
+                  label={renderCustomizedLabel}
+                  outerRadius={120}
                   fill="#8884d8"
-                  dataKey="percentage"
+                  dataKey="value"
                 >
-                  {individualLightData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  {getSwitchChartData().map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                   ))}
                 </Pie>
-                <Tooltip content={<PieTooltip />} />
-                <Legend content={<CustomLegend />} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  formatter={(value, entry) => {
+                    const item = getSwitchChartData().find(d => d.name === value)
+                    return `${value} (${item?.percentage.toFixed(1)}%)`
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>

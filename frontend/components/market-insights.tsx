@@ -1,9 +1,14 @@
+"use client"
+
+import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { GroupedBarChart } from "@/components/charts/grouped-bar-chart"
+import { MetricTypeSelector, type MetricType } from "@/components/metric-type-selector"
 
 interface SegmentData {
   segment: string
   revenue: number
+  volume: number
   products: number
 }
 
@@ -24,6 +29,8 @@ const segmentColors = [
 ]
 
 export function MarketInsights({ data }: MarketInsightsProps) {
+  const [metricType, setMetricType] = useState<MetricType>("revenue")
+
   // Helper function to wrap long text
   const wrapText = (text: string, maxLength: number = 15) => {
     if (text.length <= maxLength) return text
@@ -61,7 +68,7 @@ export function MarketInsights({ data }: MarketInsightsProps) {
       
       return {
         name: wrappedName,
-        value: item.revenue,
+        value: metricType === "revenue" ? item.revenue : item.volume,
         fill: segmentColors[index % segmentColors.length]
       }
     })
@@ -89,7 +96,7 @@ export function MarketInsights({ data }: MarketInsightsProps) {
       
       return {
         name: wrappedName,
-        value: item.revenue,
+        value: metricType === "revenue" ? item.revenue : item.volume,
         fill: segmentColors[index % segmentColors.length]
       }
     })
@@ -106,18 +113,28 @@ export function MarketInsights({ data }: MarketInsightsProps) {
   const topDimmerSegments = data.segmentRevenue.dimmerSwitches.slice(0, 3)
   const topSwitchSegments = data.segmentRevenue.lightSwitches.slice(0, 3)
 
+  const yAxisLabel = metricType === "revenue" ? "Revenue ($)" : "Volume (Units)"
+  const titleSuffix = metricType === "revenue" ? "Revenue" : "Volume"
+  const valueFormatter = metricType === "revenue" 
+    ? (value: number) => `$${value.toLocaleString()}`
+    : (value: number) => `${value.toLocaleString()}`
+
   return (
     <section className="mb-10">
       <h2 className="text-2xl font-bold text-gray-800 border-l-4 border-blue-500 pl-4 mb-6">📊 Market Insights</h2>
+
+      <div className="mb-4">
+        <MetricTypeSelector onChange={setMetricType} value={metricType} />
+      </div>
 
       <div className="space-y-8">
         {/* Dimmer Switches Chart */}
         <Card className="p-6 bg-gray-50">
           <div className="mb-4">
-            <h3 className="text-xl font-semibold mb-2 text-center">🔆 Dimmer Switches - Top Segments by Revenue</h3>
+            <h3 className="text-xl font-semibold mb-2 text-center">🔆 Dimmer Switches - Top Segments by {titleSuffix}</h3>
             <div className="text-sm text-gray-600 text-center mb-2">
               Top 3: {topDimmerSegments.map((s, i) => 
-                `${i + 1}. ${s.segment.replace(" Dimmer Switches", "")} ($${s.revenue.toLocaleString()})`
+                `${i + 1}. ${s.segment.replace(" Dimmer Switches", "")} (${valueFormatter(metricType === "revenue" ? s.revenue : s.volume)})`
               ).join(" • ")}
             </div>
           </div>
@@ -127,8 +144,9 @@ export function MarketInsights({ data }: MarketInsightsProps) {
               index="name"
               categories={["value"]}
               colors={dimmerColors}
-              yAxisLabel="Revenue ($)"
+              yAxisLabel={yAxisLabel}
               xAxisLabel="Product Segment"
+              metricType={metricType}
             />
           </div>
         </Card>
@@ -136,10 +154,10 @@ export function MarketInsights({ data }: MarketInsightsProps) {
         {/* Light Switches Chart */}
         <Card className="p-6 bg-gray-50">
           <div className="mb-4">
-            <h3 className="text-xl font-semibold mb-2 text-center">💡 Light Switches - Top Segments by Revenue</h3>
+            <h3 className="text-xl font-semibold mb-2 text-center">💡 Light Switches - Top Segments by {titleSuffix}</h3>
             <div className="text-sm text-gray-600 text-center mb-2">
               Top 3: {topSwitchSegments.map((s, i) => 
-                `${i + 1}. ${s.segment.replace(" Switches", "").replace(" Control", "")} ($${s.revenue.toLocaleString()})`
+                `${i + 1}. ${s.segment.replace(" Switches", "").replace(" Control", "")} (${valueFormatter(metricType === "revenue" ? s.revenue : s.volume)})`
               ).join(" • ")}
             </div>
           </div>
@@ -149,8 +167,9 @@ export function MarketInsights({ data }: MarketInsightsProps) {
               index="name"
               categories={["value"]}
               colors={switchColors}
-              yAxisLabel="Revenue ($)"
+              yAxisLabel={yAxisLabel}
               xAxisLabel="Product Segment"
+              metricType={metricType}
             />
           </div>
         </Card>

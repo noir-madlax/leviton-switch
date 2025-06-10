@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export type PriceType = "sku" | "unit"
@@ -19,19 +20,33 @@ export function PriceTypeSelector({ onChange, defaultValue = "unit" }: PriceType
   }
 
   return (
-    <div className="flex items-center gap-2 mb-4">
-      <span className="text-sm font-medium">Price Type:</span>
+    <div className="flex items-center space-x-4 mb-5">
+      <Label htmlFor="price-type" className="text-lg font-semibold text-gray-800">
+        Choose to show <span className="font-bold">Full Pack Price</span> or <span className="font-bold">Unit Price</span>:
+      </Label>
       <Select value={value} onValueChange={handleValueChange}>
-        <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Select price type">
-            {value === "unit" ? "Price per unit" : "Total Price (for a full pack)"}
-          </SelectValue>
+        <SelectTrigger id="price-type" className="w-[180px] text-base">
+          {value === "sku" ? "Full Pack Price" : "Unit Price"}
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="unit">Price per unit</SelectItem>
-          <SelectItem value="sku">Total Price (for a full pack)</SelectItem>
+          <SelectItem value="sku" className="text-base">
+            <span className="font-semibold">Full Pack Price</span>
+          </SelectItem>
+          <SelectItem value="unit" className="text-base">
+            <span className="font-semibold">Unit Price</span>
+          </SelectItem>
         </SelectContent>
       </Select>
+      <div className="text-sm text-gray-600 ml-4">
+        <div className="flex items-center space-x-1">
+          <span className="font-semibold">Full Pack Price:</span>
+          <span>Total price for a full package</span>
+        </div>
+        <div className="flex items-center space-x-1 mt-1">
+          <span className="font-semibold">Unit Price:</span>
+          <span>Price per individual unit within a package</span>
+        </div>
+      </div>
     </div>
   )
 }

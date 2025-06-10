@@ -10,6 +10,7 @@ interface GroupedBarChartProps {
   colors?: string[]
   yAxisLabel?: string
   xAxisLabel?: string
+  metricType?: "revenue" | "volume"
 }
 
 export function GroupedBarChart({
@@ -19,7 +20,12 @@ export function GroupedBarChart({
   colors = ["#3498DB", "#95A5A6"],
   yAxisLabel,
   xAxisLabel,
+  metricType = "revenue",
 }: GroupedBarChartProps) {
+  const formatValue = (value: number) => {
+    return metricType === "revenue" ? `$${value.toLocaleString()}` : value.toLocaleString()
+  }
+
   // Calculate dynamic margins based on longest label
   const { bottomMargin, xAxisLabelOffset } = useMemo(() => {
     if (!data.length) return { bottomMargin: 120, xAxisLabelOffset: -10 }
@@ -124,12 +130,12 @@ export function GroupedBarChart({
             position: "insideLeft",
             style: { textAnchor: 'middle', fontSize: '16px', fontWeight: 'bold' }
           }}
-          tickFormatter={(value) => `$${value.toLocaleString()}`}
+          tickFormatter={formatValue}
           tick={{ fontSize: 14 }}
           width={90} // Fixed width to prevent overlap
         />
         <Tooltip 
-          formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Revenue']}
+          formatter={(value) => [formatValue(Number(value)), metricType === "revenue" ? 'Revenue' : 'Volume']}
           labelStyle={{ color: '#333', fontWeight: 'bold' }}
           content={({ active, payload, label }) => {
             if (active && payload && payload.length) {
@@ -159,7 +165,9 @@ export function GroupedBarChart({
                   }}>
                     {label}
                   </p>
-                  <p style={{ color: '#333', margin: 0 }}>Revenue: ${Number(payload[0].value).toLocaleString()}</p>
+                  <p style={{ color: '#333', margin: 0 }}>
+                    {metricType === "revenue" ? "Revenue" : "Volume"}: {formatValue(Number(payload[0].value))}
+                  </p>
                 </div>
               )
             }

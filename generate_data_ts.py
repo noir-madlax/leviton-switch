@@ -365,7 +365,7 @@ def calculate_brand_metrics(df: pd.DataFrame) -> List[Dict]:
     return brand_metrics
 
 def calculate_brand_category_revenue(dimmer_df: pd.DataFrame, switch_df: pd.DataFrame) -> List[Dict]:
-    """Calculate revenue by brand and category"""
+    """Calculate revenue and volume by brand and category"""
     
     # Get all unique brands
     all_brands = set(dimmer_df['clean_brand'].unique()) | set(switch_df['clean_brand'].unique())
@@ -374,11 +374,15 @@ def calculate_brand_category_revenue(dimmer_df: pd.DataFrame, switch_df: pd.Data
     for brand in all_brands:
         dimmer_rev = dimmer_df[dimmer_df['clean_brand'] == brand]['revenue'].sum()
         switch_rev = switch_df[switch_df['clean_brand'] == brand]['revenue'].sum()
+        dimmer_vol = dimmer_df[dimmer_df['clean_brand'] == brand]['volume'].sum()
+        switch_vol = switch_df[switch_df['clean_brand'] == brand]['volume'].sum()
         
         brand_revenue.append({
             "brand": brand,
             "dimmerRevenue": int(dimmer_rev),
-            "switchRevenue": int(switch_rev)
+            "switchRevenue": int(switch_rev),
+            "dimmerVolume": int(dimmer_vol),
+            "switchVolume": int(switch_vol)
         })
     
     # Sort by total revenue
@@ -417,10 +421,13 @@ def calculate_executive_summary(all_df: pd.DataFrame, dimmer_df: pd.DataFrame, s
     }
 
 def calculate_product_segment_insights(dimmer_df: pd.DataFrame, switch_df: pd.DataFrame) -> Dict:
-    """Calculate product segment revenue distribution for market insights"""
+    """Calculate product segment revenue and volume distribution for market insights"""
     
-    # Calculate dimmer switches segment revenue
-    dimmer_segments = dimmer_df.groupby('product_segment')['revenue'].sum().reset_index()
+    # Calculate dimmer switches segment revenue and volume
+    dimmer_segments = dimmer_df.groupby('product_segment').agg({
+        'revenue': 'sum',
+        'volume': 'sum'
+    }).reset_index()
     dimmer_segments = dimmer_segments.sort_values('revenue', ascending=False)
     
     dimmer_segment_data = []
@@ -428,11 +435,15 @@ def calculate_product_segment_insights(dimmer_df: pd.DataFrame, switch_df: pd.Da
         dimmer_segment_data.append({
             "segment": row['product_segment'],
             "revenue": int(row['revenue']),
+            "volume": int(row['volume']),
             "products": int(dimmer_df[dimmer_df['product_segment'] == row['product_segment']].shape[0])
         })
     
-    # Calculate light switches segment revenue  
-    switch_segments = switch_df.groupby('product_segment')['revenue'].sum().reset_index()
+    # Calculate light switches segment revenue and volume
+    switch_segments = switch_df.groupby('product_segment').agg({
+        'revenue': 'sum',
+        'volume': 'sum'
+    }).reset_index()
     switch_segments = switch_segments.sort_values('revenue', ascending=False)
     
     switch_segment_data = []
@@ -440,6 +451,7 @@ def calculate_product_segment_insights(dimmer_df: pd.DataFrame, switch_df: pd.Da
         switch_segment_data.append({
             "segment": row['product_segment'],
             "revenue": int(row['revenue']),
+            "volume": int(row['volume']),
             "products": int(switch_df[switch_df['product_segment'] == row['product_segment']].shape[0])
         })
     

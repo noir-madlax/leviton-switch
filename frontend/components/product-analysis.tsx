@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { ScatterChart } from "@/components/charts/scatter-chart"
 import { HorizontalBarChart } from "@/components/charts/horizontal-bar-chart"
 import { PriceTypeSelector, type PriceType } from "@/components/price-type-selector"
+import { MetricTypeSelector, type MetricType } from "@/components/metric-type-selector"
 
 interface ProductAnalysisProps {
   data: {
@@ -30,6 +31,7 @@ interface ProductAnalysisProps {
         price: number
         unitPrice: number
         revenue: number
+        volume: number
         url: string
       }[]
     }[]
@@ -38,27 +40,29 @@ interface ProductAnalysisProps {
 
 export function ProductAnalysis({ data }: ProductAnalysisProps) {
   const [priceType, setPriceType] = useState<PriceType>("unit")
+  const [metricType, setMetricType] = useState<MetricType>("revenue")
 
-  // Transform data for scatter chart based on selected price type
+  // Transform data for scatter chart based on selected price type and metric type
   const transformScatterData = (products: any[], category: string) => {
     return products.map((p) => ({
       x: priceType === "sku" ? p.price : p.unitPrice,
-      y: p.revenue,
+      y: metricType === "revenue" ? p.revenue : p.volume,
       name: p.name,
       brand: p.brand,
       volume: p.volume,
+      revenue: p.revenue,
       url: p.url,
       category: category,
     }))
   }
 
-  const dimmerData = transformScatterData(data.priceVsRevenue[0].products, "Dimmer Switches")
-  const switchData = transformScatterData(data.priceVsRevenue[1].products, "Light Switches")
+  const dimmerData = transformScatterData(data.priceVsRevenue[0].products, "🔆 Dimmer Switches")
+  const switchData = transformScatterData(data.priceVsRevenue[1].products, "💡 Light Switches")
 
   // Transform data for horizontal bar charts
   const topDimmers = data.topProducts[0].products.map((p) => ({
     name: p.name,
-    value: p.revenue,
+    value: metricType === "revenue" ? p.revenue : p.volume,
     brand: p.brand,
     price: priceType === "sku" ? p.price : p.unitPrice,
     url: p.url,
@@ -66,26 +70,34 @@ export function ProductAnalysis({ data }: ProductAnalysisProps) {
 
   const topSwitches = data.topProducts[1].products.map((p) => ({
     name: p.name,
-    value: p.revenue,
+    value: metricType === "revenue" ? p.revenue : p.volume,
     brand: p.brand,
     price: priceType === "sku" ? p.price : p.unitPrice,
     url: p.url,
   }))
 
+  const yAxisLabel = metricType === "revenue" ? "Revenue (USD)" : "Volume (Units)"
+  const valueLabel = metricType === "revenue" ? "Total Revenue ($)" : "Total Volume (Units)"
+  const titleSuffix = metricType === "revenue" ? "Revenue" : "Volume"
+
   return (
     <section className="mb-10">
       <h2 className="text-2xl font-bold text-gray-800 border-l-4 border-blue-500 pl-4 mb-6">📦 Product Analysis</h2>
 
-      <h3 className="text-xl font-semibold mb-4">Top 20 Products by Revenue (Price vs Revenue by Category)</h3>
+      <h3 className="text-xl font-semibold mb-4">Top 20 Products by {titleSuffix} (Price vs {titleSuffix} by Category)</h3>
       <Card className="p-6 bg-gray-50 mb-8">
-        <PriceTypeSelector onChange={setPriceType} />
+        <div className="flex gap-4 mb-4">
+          <PriceTypeSelector onChange={setPriceType} />
+          <MetricTypeSelector onChange={setMetricType} value={metricType} />
+        </div>
         <div className="h-[800px]">
           <ScatterChart
             dimmerData={dimmerData}
             switchData={switchData}
             xAxisLabel="Price (USD)"
-            yAxisLabel="Revenue (USD)"
+            yAxisLabel={yAxisLabel}
             priceType={priceType}
+            metricType={metricType}
           />
         </div>
       </Card>
@@ -94,15 +106,25 @@ export function ProductAnalysis({ data }: ProductAnalysisProps) {
       <Card className="p-6 bg-gray-50">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
-            <h4 className="text-lg font-medium mb-3 text-center">🔆 Top 20 Dimmer Switches (by Total Revenue)</h4>
+            <h4 className="text-lg font-medium mb-3 text-center">🔆 Top 20 Dimmer Switches (by Total {titleSuffix})</h4>
             <div className="h-[500px]">
-              <HorizontalBarChart data={topDimmers} colors={getBrandColors()} valueLabel="Total Revenue ($)" />
+              <HorizontalBarChart 
+                data={topDimmers} 
+                colors={getBrandColors()} 
+                valueLabel={valueLabel} 
+                metricType={metricType}
+              />
             </div>
           </div>
           <div>
-            <h4 className="text-lg font-medium mb-3 text-center">💡 Top 20 Light Switches (by Total Revenue)</h4>
+            <h4 className="text-lg font-medium mb-3 text-center">💡 Top 20 Light Switches (by Total {titleSuffix})</h4>
             <div className="h-[500px]">
-              <HorizontalBarChart data={topSwitches} colors={getBrandColors()} valueLabel="Total Revenue ($)" />
+              <HorizontalBarChart 
+                data={topSwitches} 
+                colors={getBrandColors()} 
+                valueLabel={valueLabel} 
+                metricType={metricType}
+              />
             </div>
           </div>
         </div>

@@ -12,6 +12,7 @@ import {
   ZAxis,
 } from "recharts"
 import type { PriceType } from "@/components/price-type-selector"
+import type { MetricType } from "@/components/metric-type-selector"
 
 interface ScatterChartProps {
   dimmerData: {
@@ -20,6 +21,7 @@ interface ScatterChartProps {
     name: string
     brand: string
     volume: number
+    revenue: number
     url?: string
     category: string
   }[]
@@ -29,15 +31,24 @@ interface ScatterChartProps {
     name: string
     brand: string
     volume: number
+    revenue: number
     url?: string
     category: string
   }[]
   xAxisLabel?: string
   yAxisLabel?: string
   priceType?: PriceType
+  metricType?: MetricType
 }
 
-export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, priceType = "sku" }: ScatterChartProps) {
+export function ScatterChart({ 
+  dimmerData, 
+  switchData, 
+  xAxisLabel, 
+  yAxisLabel, 
+  priceType = "sku",
+  metricType = "revenue"
+}: ScatterChartProps) {
   // Function to lighten a color
   const lightenColor = (color: string, amount: number = 0.4) => {
     // Handle rgb() format
@@ -105,14 +116,19 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
     switchByBrand[item.brand].push(item)
   })
 
+  const metricLabel = metricType === "revenue" ? "Revenue" : "Volume"
+  const metricFormatter = metricType === "revenue" 
+    ? (value: number) => `$${value.toLocaleString()}`
+    : (value: number) => `${value.toLocaleString()}`
+
   return (
     <div className="flex flex-col h-full">
       <h3 className="text-center text-lg font-medium mb-2">
-        Top 20 Products by Revenue: {priceType === "sku" ? "SKU" : "Unit"} Price vs Revenue Analysis
+        Top 20 Products by {metricLabel}: {priceType === "sku" ? "SKU" : "Unit"} Price vs {metricLabel} Analysis
       </h3>
 
       <div className="flex-1">
-        <h4 className="text-center text-base font-medium mb-1">☀️ Dimmer Switches - Price vs Revenue</h4>
+        <h4 className="text-center text-base font-medium mb-1">🔆 Dimmer Switches - Price vs {metricLabel}</h4>
         <div className="h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <ReChartsScatter
@@ -136,8 +152,8 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
               <YAxis
                 type="number"
                 dataKey="y"
-                name="Revenue"
-                tickFormatter={(value) => `$${value.toLocaleString()}`}
+                name={metricLabel}
+                tickFormatter={metricFormatter}
                 label={{ value: yAxisLabel, angle: -90, position: "insideLeft", offset: -5 }}
                 width={90}
               />
@@ -146,7 +162,7 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
                 cursor={{ strokeDasharray: "3 3" }}
                 formatter={(value, name, props) => {
                   if (name === "Price") return `$${Number(value).toFixed(2)}`
-                  if (name === "Revenue") return `$${Number(value).toLocaleString()}`
+                  if (name === metricLabel) return metricFormatter(Number(value))
                   return value
                 }}
                 content={({ active, payload }) => {
@@ -180,7 +196,7 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
                         <p style={{ margin: '3px 0', color: '#333' }}>Brand: {data.brand}</p>
                         <p style={{ margin: '3px 0', color: '#333' }}>Category: {data.category}</p>
                         <p style={{ margin: '3px 0', color: '#333' }}>Price: ${data.x.toFixed(2)}</p>
-                        <p style={{ margin: '3px 0', color: '#333' }}>Revenue: ${data.y.toLocaleString()}</p>
+                        <p style={{ margin: '3px 0', color: '#333' }}>Revenue: ${data.revenue.toLocaleString()}</p>
                         <p style={{ margin: '3px 0 0 0', color: '#333' }}>Volume: {data.volume.toLocaleString()}</p>
                       </div>
                     )
@@ -198,14 +214,14 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
       </div>
 
       <div className="flex-1 mt-4">
-        <h4 className="text-center text-base font-medium mb-1">💡 Light Switches - Price vs Revenue</h4>
+        <h4 className="text-center text-base font-medium mb-1">💡 Light Switches - Price vs {metricLabel}</h4>
         <div className="h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <ReChartsScatter
               margin={{
                 top: 20,
                 right: 30,
-                left: 20,
+                left: 30,
                 bottom: 20,
               }}
             >
@@ -222,9 +238,9 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
               <YAxis
                 type="number"
                 dataKey="y"
-                name="Revenue"
-                tickFormatter={(value) => `$${value.toLocaleString()}`}
-                label={{ value: yAxisLabel, angle: -90, position: "insideLeft", offset: -8 }}
+                name={metricLabel}
+                tickFormatter={metricFormatter}
+                label={{ value: yAxisLabel, angle: -90, position: "insideLeft", offset: -5 }}
                 width={90}
               />
               <ZAxis range={[100, 101]} />
@@ -232,7 +248,7 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
                 cursor={{ strokeDasharray: "3 3" }}
                 formatter={(value, name, props) => {
                   if (name === "Price") return `$${Number(value).toFixed(2)}`
-                  if (name === "Revenue") return `$${Number(value).toLocaleString()}`
+                  if (name === metricLabel) return metricFormatter(Number(value))
                   return value
                 }}
                 content={({ active, payload }) => {
@@ -266,7 +282,7 @@ export function ScatterChart({ dimmerData, switchData, xAxisLabel, yAxisLabel, p
                         <p style={{ margin: '3px 0', color: '#333' }}>Brand: {data.brand}</p>
                         <p style={{ margin: '3px 0', color: '#333' }}>Category: {data.category}</p>
                         <p style={{ margin: '3px 0', color: '#333' }}>Price: ${data.x.toFixed(2)}</p>
-                        <p style={{ margin: '3px 0', color: '#333' }}>Revenue: ${data.y.toLocaleString()}</p>
+                        <p style={{ margin: '3px 0', color: '#333' }}>Revenue: ${data.revenue.toLocaleString()}</p>
                         <p style={{ margin: '3px 0 0 0', color: '#333' }}>Volume: {data.volume.toLocaleString()}</p>
                       </div>
                     )

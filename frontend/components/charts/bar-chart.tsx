@@ -18,6 +18,7 @@ interface BarChartProps {
   colors?: string[]
   yAxisLabel?: string
   xAxisLabel?: string
+  metricType?: "revenue" | "volume"
 }
 
 export function BarChart({
@@ -27,7 +28,12 @@ export function BarChart({
   colors = ["#FF6B6B", "#4ECDC4"],
   yAxisLabel,
   xAxisLabel,
+  metricType = "revenue",
 }: BarChartProps) {
+  const formatValue = (value: number) => {
+    return metricType === "revenue" ? `$${value.toLocaleString()}` : value.toLocaleString()
+  }
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <ReChartsBar
@@ -54,9 +60,9 @@ export function BarChart({
           }}
         />
         <YAxis
-          tickFormatter={(value) => `$${value.toLocaleString()}`}
+          tickFormatter={formatValue}
         />
-        <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
+        <Tooltip formatter={formatValue} />
         <Legend
           verticalAlign="bottom"
           iconSize={12}

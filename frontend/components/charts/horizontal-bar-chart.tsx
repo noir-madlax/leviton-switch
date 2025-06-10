@@ -12,9 +12,14 @@ interface HorizontalBarChartProps {
   }[]
   colors: Record<string, string>
   valueLabel?: string
+  metricType?: "revenue" | "volume"
 }
 
-export function HorizontalBarChart({ data, colors, valueLabel }: HorizontalBarChartProps) {
+export function HorizontalBarChart({ data, colors, valueLabel, metricType = "revenue" }: HorizontalBarChartProps) {
+  const formatValue = (value: number) => {
+    return metricType === "revenue" ? `$${value.toLocaleString()}` : value.toLocaleString()
+  }
+
   // Function to lighten a color
   const lightenColor = (color: string, amount: number = 0.4) => {
     // Handle rgb() format
@@ -61,7 +66,7 @@ export function HorizontalBarChart({ data, colors, valueLabel }: HorizontalBarCh
         <CartesianGrid strokeDasharray="3 3" horizontal={false} />
         <XAxis
           type="number"
-          tickFormatter={(value) => `$${value.toLocaleString()}`}
+          tickFormatter={formatValue}
           label={{
             value: valueLabel,
             position: "insideBottom",
@@ -105,7 +110,9 @@ export function HorizontalBarChart({ data, colors, valueLabel }: HorizontalBarCh
                     {label}
                   </p>
                   <p style={{ margin: '3px 0', color: '#333' }}>Brand: {item.brand}</p>
-                  <p style={{ margin: '3px 0', color: '#333' }}>Revenue: ${Number(item.value).toLocaleString()}</p>
+                  <p style={{ margin: '3px 0', color: '#333' }}>
+                    {metricType === "revenue" ? "Revenue" : "Volume"}: {formatValue(Number(item.value))}
+                  </p>
                   {item.price && (
                     <p style={{ margin: '3px 0 0 0', color: '#333' }}>Price: ${item.price.toFixed(2)}</p>
                   )}

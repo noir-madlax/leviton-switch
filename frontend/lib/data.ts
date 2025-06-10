@@ -1,5 +1,5 @@
 // Auto-generated from combined_products_with_final_categories.csv
-// Generated on 2025-06-09 21:07:32
+// Generated on 2025-06-09 21:16:19
 // Source: Amazon scraped data (filtered: source=amazon, product_segment!=OUT_OF_SCOPE)
 
 export async function fetchDashboardData() {
@@ -28,52 +28,72 @@ export async function fetchDashboardData() {
         {
                 "brand": "Lutron",
                 "dimmerRevenue": 472136,
-                "switchRevenue": 37958
+                "switchRevenue": 37958,
+                "dimmerVolume": 8550,
+                "switchVolume": 1150
         },
         {
                 "brand": "Kasa",
                 "dimmerRevenue": 184012,
-                "switchRevenue": 313890
+                "switchRevenue": 313890,
+                "dimmerVolume": 5800,
+                "switchVolume": 11000
         },
         {
                 "brand": "Leviton",
                 "dimmerRevenue": 133730,
-                "switchRevenue": 138014
+                "switchRevenue": 138014,
+                "dimmerVolume": 6900,
+                "switchVolume": 8900
         },
         {
                 "brand": "ELEGRP",
                 "dimmerRevenue": 130329,
-                "switchRevenue": 37811
+                "switchRevenue": 37811,
+                "dimmerVolume": 2050,
+                "switchVolume": 1900
         },
         {
                 "brand": "GE",
                 "dimmerRevenue": 121839,
-                "switchRevenue": 40035
+                "switchRevenue": 40035,
+                "dimmerVolume": 4650,
+                "switchVolume": 3400
         },
         {
                 "brand": "BESTTEN",
                 "dimmerRevenue": 48181,
-                "switchRevenue": 38582
+                "switchRevenue": 38582,
+                "dimmerVolume": 1850,
+                "switchVolume": 1800
         },
         {
                 "brand": "TP-Link",
                 "dimmerRevenue": 60289,
-                "switchRevenue": 24990
+                "switchRevenue": 24990,
+                "dimmerVolume": 1100,
+                "switchVolume": 1000
         },
         {
                 "brand": "TREATLIFE",
                 "dimmerRevenue": 65132,
-                "switchRevenue": 8998
+                "switchRevenue": 8998,
+                "dimmerVolume": 1750,
+                "switchVolume": 200
         },
         {
                 "brand": "Amazon",
                 "dimmerRevenue": 24977,
-                "switchRevenue": 24084
+                "switchRevenue": 24084,
+                "dimmerVolume": 1150,
+                "switchVolume": 1300
         },
         {
                 "brand": "ENERLITES Store",
                 "dimmerRevenue": 0,
-                "switchRevenue": 44973
+                "switchRevenue": 44973,
+                "dimmerVolume": 0,
+                "switchVolume": 2650
         }
 ]
     },
@@ -1964,101 +1984,121 @@ export async function fetchDashboardData() {
                   {
                         "segment": "Smart Wi-Fi Enabled Dimmer Switches",
                         "revenue": 377465,
+                        "volume": 10650,
                         "products": 30
                   },
                   {
                         "segment": "Smart Hub-Dependent Dimmer Switches",
                         "revenue": 340089,
+                        "volume": 5700,
                         "products": 16
                   },
                   {
                         "segment": "Slide Control Dimmer Switches",
                         "revenue": 276384,
+                        "volume": 9600,
                         "products": 26
                   },
                   {
                         "segment": "LED Optimized Dimmer Switches",
                         "revenue": 118475,
+                        "volume": 4700,
                         "products": 18
                   },
                   {
                         "segment": "Plug-In Portable Dimmer Controls",
                         "revenue": 58964,
+                        "volume": 2000,
                         "products": 7
                   },
                   {
                         "segment": "Dual Circuit Dimmer Switches",
                         "revenue": 35690,
+                        "volume": 500,
                         "products": 1
                   },
                   {
                         "segment": "Toggle Style Dimmer Switches",
                         "revenue": 26654,
+                        "volume": 1100,
                         "products": 5
                   },
                   {
                         "segment": "Multi-Location Companion Dimmer Switches",
                         "revenue": 26379,
+                        "volume": 1000,
                         "products": 3
                   },
                   {
                         "segment": "Rocker Style Dimmer Switches",
                         "revenue": 19894,
+                        "volume": 750,
                         "products": 10
                   },
                   {
                         "segment": "Universal Multi-Load Dimmer Switches",
                         "revenue": 18433,
+                        "volume": 500,
                         "products": 3
                   },
                   {
                         "segment": "Multi-Function Timer Dimmer Switches",
                         "revenue": 13790,
+                        "volume": 200,
                         "products": 1
                   },
                   {
                         "segment": "Commercial 0-10V Dimmer Switches",
                         "revenue": 13403,
+                        "volume": 300,
                         "products": 7
                   },
                   {
                         "segment": "Rotary Knob Dimmer Switches",
                         "revenue": 12678,
+                        "volume": 1000,
                         "products": 7
                   },
                   {
                         "segment": "Touch Activated Dimmer Switches",
                         "revenue": 9989,
+                        "volume": 250,
                         "products": 4
                   },
                   {
                         "segment": "Fan and Light Combination Dimmer Controls",
                         "revenue": 9874,
+                        "volume": 200,
                         "products": 2
                   },
                   {
                         "segment": "Electronic Low Voltage Dimmer Switches",
                         "revenue": 7800,
+                        "volume": 100,
                         "products": 2
                   },
                   {
                         "segment": "Incandescent Compatible Dimmer Switches",
                         "revenue": 2699,
+                        "volume": 50,
                         "products": 3
                   },
                   {
                         "segment": "USB Powered Dimmer Switches",
                         "revenue": 949,
+                        "volume": 100,
                         "products": 2
                   },
                   {
                         "segment": "Digital Display Dimmer Switches",
                         "revenue": 0,
+                        "volume": 0,
                         "products": 3
                   },
                   {
                         "segment": "Handheld Remote Control Dimmer Switches",
                         "revenue": 0,
+                        "volume": 0,
                         "products": 1
                   }
             ],
@@ -2066,86 +2106,103 @@ export async function fetchDashboardData() {
                   {
                         "segment": "WiFi Connected Smart Switches",
                         "revenue": 417004,
+                        "volume": 14800,
                         "products": 21
                   },
                   {
                         "segment": "Single Pole Rocker Switches",
                         "revenue": 189067,
+                        "volume": 9400,
                         "products": 30
                   },
                   {
                         "segment": "Three Way Multi-Location Control Switches",
                         "revenue": 57189,
+                        "volume": 3950,
                         "products": 13
                   },
                   {
                         "segment": "Smart Hub Dependent Switches",
                         "revenue": 53058,
+                        "volume": 1150,
                         "products": 6
                   },
                   {
                         "segment": "Multi-Function Combination Switches",
                         "revenue": 35021,
+                        "volume": 3600,
                         "products": 15
                   },
                   {
                         "segment": "RF Wireless Remote Control Switches",
                         "revenue": 33376,
+                        "volume": 2400,
                         "products": 5
                   },
                   {
                         "segment": "LED Illuminated Indicator Switches",
                         "revenue": 29862,
+                        "volume": 1650,
                         "products": 13
                   },
                   {
                         "segment": "Single Pole Toggle Switches",
                         "revenue": 28307,
+                        "volume": 2600,
                         "products": 17
                   },
                   {
                         "segment": "Four Way Multi-Location Control Switches",
                         "revenue": 12255,
+                        "volume": 650,
                         "products": 9
                   },
                   {
                         "segment": "Specialty Environmental Control Switches",
                         "revenue": 7898,
+                        "volume": 200,
                         "products": 1
                   },
                   {
                         "segment": "High Amperage Rocker Switches",
                         "revenue": 2236,
+                        "volume": 400,
                         "products": 1
                   },
                   {
                         "segment": "Dimmer Switches",
                         "revenue": 1430,
+                        "volume": 100,
                         "products": 1
                   },
                   {
                         "segment": "Switch Outlet Combination Devices",
                         "revenue": 1399,
+                        "volume": 100,
                         "products": 1
                   },
                   {
                         "segment": "Add On Auxiliary Switches",
                         "revenue": 807,
+                        "volume": 50,
                         "products": 1
                   },
                   {
                         "segment": "Multi-Feature Combination Control Switches",
                         "revenue": 0,
+                        "volume": 0,
                         "products": 1
                   },
                   {
                         "segment": "Inline Cord Control Switches",
                         "revenue": 0,
+                        "volume": 0,
                         "products": 1
                   },
                   {
                         "segment": "Sound Activated Switches",
                         "revenue": 0,
+                        "volume": 1000,
                         "products": 1
                   }
             ]
