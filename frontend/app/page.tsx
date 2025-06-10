@@ -7,6 +7,7 @@ import { MarketInsights } from "@/components/market-insights"
 import { PackagePreferenceAnalysis } from "@/components/package-preference-analysis"
 import { SummaryMetrics } from "@/components/summary-metrics"
 import { ReviewInsights } from "@/components/review-insights"
+import { CompetitorAnalysis } from "@/components/competitor-analysis"
 import { fetchDashboardData } from "@/lib/data"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -19,9 +20,10 @@ export default async function Home() {
         <DashboardHeader />
         
         <Tabs defaultValue="market-analysis" className="mt-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="market-analysis">Market Analysis</TabsTrigger>
             <TabsTrigger value="review-insights">Review Insights</TabsTrigger>
+            <TabsTrigger value="competitor-analysis">Competitor Analysis</TabsTrigger>
           </TabsList>
           
           <TabsContent value="market-analysis" className="mt-6">
@@ -36,6 +38,10 @@ export default async function Home() {
           
           <TabsContent value="review-insights" className="mt-6">
             <ReviewInsights />
+          </TabsContent>
+
+          <TabsContent value="competitor-analysis" className="mt-6">
+            <CompetitorAnalysis />
           </TabsContent>
         </Tabs>
 
