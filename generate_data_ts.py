@@ -162,6 +162,68 @@ def categorize_product_type(title: str, segment: str) -> str:
     
     return "Traditional"
 
+def clean_unit_price(unit_price_str):
+    """Clean unit price data to extract numeric value"""
+    if pd.isna(unit_price_str) or unit_price_str == '':
+        return 0.0
+    
+    # Convert to string
+    unit_price_str = str(unit_price_str)
+    
+    # Look for patterns like "$30.00$30.00/count", "$7.50$7.50/count"
+    # Extract the first price value
+    match = re.search(r'\$(\d+(?:\.\d+)?)', unit_price_str)
+    if match:
+        return float(match.group(1))
+    
+    # If no dollar sign, look for any decimal number
+    match = re.search(r'(\d+(?:\.\d+)?)', unit_price_str)
+    if match:
+        return float(match.group(1))
+    
+    return 0.0
+
+def extract_pack_number(title):
+    """Extract pack number from product title"""
+    if pd.isna(title):
+        return 1
+    
+    title = str(title).lower()
+    
+    # Look for various pack patterns
+    patterns = [
+        r'(\d+)\s*pack',           # "6 Pack", "10 Pack", "6Pack"
+        r'(\d+)-pack',             # "6-Pack", "10-Pack"
+        r'\((\d+)\s*pack\)',       # "(6 Pack)", "(10 Pack)"
+        r'\[(\d+)\s*pack\]',       # "[6 Pack]", "[10 Pack]"
+        r'(\d+)\s*count',          # "6 Count", "10 Count"
+        r'\((\d+)\)',              # "(6)", "(10)" - as last resort
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, title)
+        if match:
+            pack_num = int(match.group(1))
+            # Sanity check: pack numbers should be reasonable (1-100)
+            if 1 <= pack_num <= 100:
+                return pack_num
+    
+    return 1  # Default to 1 if no pack number found
+
+def calculate_unit_price(row):
+    """Calculate unit price considering pack numbers when unit_price is missing"""
+    # First try to get cleaned unit price
+    unit_price = clean_unit_price(row['unit_price'])
+    
+    # If no unit price available, calculate from total price and pack number
+    if unit_price == 0.0:
+        total_price = row['price_usd'] if not pd.isna(row['price_usd']) else 0.0
+        if total_price > 0:
+            pack_number = extract_pack_number(row['title'])
+            unit_price = total_price / pack_number
+    
+    return unit_price
+
 def load_and_process_data(csv_path: str) -> tuple:
     """Load CSV data and process it into dimmer and switch categories"""
     
@@ -216,7 +278,8 @@ def load_and_process_data(csv_path: str) -> tuple:
     
     # Fill missing prices with 0
     filtered_df['price_usd'] = pd.to_numeric(filtered_df['price_usd'], errors='coerce').fillna(0)
-    filtered_df['unit_price'] = pd.to_numeric(filtered_df['unit_price'], errors='coerce').fillna(0)
+    # Calculate unit price using pack numbers when needed
+    filtered_df['unit_price'] = filtered_df.apply(calculate_unit_price, axis=1)
     
     # Calculate revenue (price * volume)
     filtered_df['revenue'] = filtered_df['price_usd'] * filtered_df['volume']
@@ -387,36 +450,90 @@ def calculate_summary_metrics(all_df: pd.DataFrame, dimmer_df: pd.DataFrame, swi
         "majorBrands": major_brands
     }
 
-def calculate_pricing_analysis(all_df: pd.DataFrame) -> Dict:
-    """Calculate pricing analysis data"""
+def calculate_pricing_analysis(dimmer_df: pd.DataFrame, switch_df: pd.DataFrame) -> Dict:
+    """Calculate detailed pricing analysis data with distributions and brand data"""
     
-    # Price distribution by ranges
-    def categorize_price(price):
-        if price < 25:
-            return "$0-25"
-        elif price < 50:
-            return "$25-50"
-        elif price < 100:
-            return "$50-100"
-        else:
-            return "$100+"
+    def calculate_price_stats(prices):
+        """Calculate statistical measures for price distribution"""
+        if len(prices) == 0:
+            return {
+                "min": 0,
+                "q1": 0,
+                "median": 0,
+                "mean": 0,
+                "q3": 0,
+                "max": 0
+            }
+        
+        prices_sorted = sorted(prices)
+        n = len(prices_sorted)
+        
+        return {
+            "min": float(prices_sorted[0]),
+            "q1": float(prices_sorted[n//4]) if n >= 4 else float(prices_sorted[0]),
+            "median": float(prices_sorted[n//2]) if n > 0 else 0,
+            "mean": float(sum(prices) / len(prices)),
+            "q3": float(prices_sorted[3*n//4]) if n >= 4 else float(prices_sorted[-1]),
+            "max": float(prices_sorted[-1])
+        }
     
-    all_df['price_category'] = all_df['price_usd'].apply(categorize_price)
-    price_dist = all_df.groupby('price_category').agg({
-        'platform_id': 'count',
-        'revenue': 'sum'
-    }).reset_index()
+    # Calculate price distributions by category
+    dimmer_sku_prices = dimmer_df['price_usd'].tolist()
+    dimmer_unit_prices = dimmer_df['unit_price'].fillna(0).tolist()
     
-    price_distribution = []
-    for _, row in price_dist.iterrows():
-        price_distribution.append({
-            "range": row['price_category'],
-            "products": int(row['platform_id']),
-            "revenue": int(row['revenue'])
-        })
+    switch_sku_prices = switch_df['price_usd'].tolist()
+    switch_unit_prices = switch_df['unit_price'].fillna(0).tolist()
+    
+    # Calculate brand price distributions
+    def get_brand_distributions(df, category_name):
+        brands_data = []
+        top_brands = df['clean_brand'].value_counts().head(8).index.tolist()
+        
+        for brand in top_brands:
+            brand_df = df[df['clean_brand'] == brand]
+            if len(brand_df) > 0:
+                # Remove duplicates by title to avoid duplicate entries
+                brand_df_unique = brand_df.drop_duplicates(subset=['clean_title'], keep='first')
+                brands_data.append({
+                    "name": brand,
+                    "skuPrices": brand_df_unique['price_usd'].tolist(),
+                    "unitPrices": brand_df_unique['unit_price'].fillna(0).tolist()
+                })
+        
+        return {
+            "category": category_name,
+            "brands": brands_data
+        }
+    
+    price_distribution = [
+        {
+            "category": "Dimmer Switches",
+            "skuPrices": dimmer_sku_prices,
+            "unitPrices": dimmer_unit_prices,
+            "stats": {
+                "sku": calculate_price_stats(dimmer_sku_prices),
+                "unit": calculate_price_stats([p for p in dimmer_unit_prices if p > 0])
+            }
+        },
+        {
+            "category": "Light Switches",
+            "skuPrices": switch_sku_prices,
+            "unitPrices": switch_unit_prices,
+            "stats": {
+                "sku": calculate_price_stats(switch_sku_prices),
+                "unit": calculate_price_stats([p for p in switch_unit_prices if p > 0])
+            }
+        }
+    ]
+    
+    brand_price_distribution = [
+        get_brand_distributions(dimmer_df, "Dimmer Switches"),
+        get_brand_distributions(switch_df, "Light Switches")
+    ]
     
     return {
-        "priceDistribution": price_distribution
+        "priceDistribution": price_distribution,
+        "brandPriceDistribution": brand_price_distribution
     }
 
 def generate_data_ts(csv_path: str, output_path: str):
@@ -434,7 +551,7 @@ def generate_data_ts(csv_path: str, output_path: str):
     brand_category_revenue = calculate_brand_category_revenue(dimmer_df, switch_df)
     market_insights = calculate_product_segment_insights(dimmer_df, switch_df)
     summary_metrics = calculate_summary_metrics(all_df, dimmer_df, switch_df)
-    pricing_analysis = calculate_pricing_analysis(all_df.copy())
+    pricing_analysis = calculate_pricing_analysis(dimmer_df, switch_df)
     
     # Generate TypeScript content
     ts_content = f'''// Auto-generated from combined_products_with_final_categories.csv

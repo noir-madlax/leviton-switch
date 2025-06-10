@@ -37,7 +37,7 @@ interface ProductAnalysisProps {
 }
 
 export function ProductAnalysis({ data }: ProductAnalysisProps) {
-  const [priceType, setPriceType] = useState<PriceType>("sku")
+  const [priceType, setPriceType] = useState<PriceType>("unit")
 
   // Transform data for scatter chart based on selected price type
   const transformScatterData = (products: any[], category: string) => {

@@ -10,7 +10,7 @@ interface PriceTypeSelectorProps {
   defaultValue?: PriceType
 }
 
-export function PriceTypeSelector({ onChange, defaultValue = "sku" }: PriceTypeSelectorProps) {
+export function PriceTypeSelector({ onChange, defaultValue = "unit" }: PriceTypeSelectorProps) {
   const [value, setValue] = useState<PriceType>(defaultValue)
 
   const handleValueChange = (newValue: PriceType) => {
@@ -24,12 +24,12 @@ export function PriceTypeSelector({ onChange, defaultValue = "sku" }: PriceTypeS
       <Select value={value} onValueChange={handleValueChange}>
         <SelectTrigger className="w-[200px]">
           <SelectValue placeholder="Select price type">
-            {value === "sku" ? "Total Price (for a full pack)" : "Price per unit"}
+            {value === "unit" ? "Price per unit" : "Total Price (for a full pack)"}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="sku">Total Price (for a full pack)</SelectItem>
           <SelectItem value="unit">Price per unit</SelectItem>
+          <SelectItem value="sku">Total Price (for a full pack)</SelectItem>
         </SelectContent>
       </Select>
     </div>

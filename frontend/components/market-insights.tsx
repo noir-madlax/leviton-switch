@@ -121,7 +121,7 @@ export function MarketInsights({ data }: MarketInsightsProps) {
               ).join(" • ")}
             </div>
           </div>
-          <div className="h-[550px]">
+          <div className="h-[590px]">
             <GroupedBarChart
               data={dimmerChartData}
               index="name"
@@ -143,7 +143,7 @@ export function MarketInsights({ data }: MarketInsightsProps) {
               ).join(" • ")}
             </div>
           </div>
-          <div className="h-[550px]">
+          <div className="h-[590px]">
             <GroupedBarChart
               data={switchChartData}
               index="name"

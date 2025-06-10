@@ -43,7 +43,7 @@ interface PricingAnalysisProps {
 }
 
 export function PricingAnalysis({ data }: PricingAnalysisProps) {
-  const [priceType, setPriceType] = useState<PriceType>("sku")
+  const [priceType, setPriceType] = useState<PriceType>("unit")
 
   // Add error handling for data access
   const getPrices = (category: number) => {
@@ -114,16 +114,16 @@ export function PricingAnalysis({ data }: PricingAnalysisProps) {
       <h3 className="text-xl font-semibold mb-4">Brand Price Distribution by Category</h3>
       <Card className="p-6 bg-gray-50">
         <PriceTypeSelector onChange={setPriceType} />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div>
-            <h4 className="text-lg font-medium mb-3 text-center">🔆 Price Distribution by Brand - Dimmer Switches</h4>
-            <div className="h-[400px]">
+        <div className="space-y-8">
+          <div className="w-full">
+            <h4 className="text-lg font-medium mb-3 text-center">🔆 Dimmer Switches</h4>
+            <div className="h-[320px] w-full">
               <BrandViolinChart brands={getBrands(0)} priceType={priceType} category="Dimmer Switches" />
             </div>
           </div>
-          <div>
-            <h4 className="text-lg font-medium mb-3 text-center">💡 Price Distribution by Brand - Light Switches</h4>
-            <div className="h-[400px]">
+          <div className="w-full">
+            <h4 className="text-lg font-medium mb-3 text-center">💡 Light Switches</h4>
+            <div className="h-[320px] w-full">
               <BrandViolinChart brands={getBrands(1)} priceType={priceType} category="Light Switches" />
             </div>
           </div>
