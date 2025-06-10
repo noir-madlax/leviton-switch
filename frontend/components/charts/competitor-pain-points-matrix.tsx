@@ -16,7 +16,6 @@ import { ProductPainPoint, getSatisfactionColor, getBubbleSize } from "@/lib/com
 
 interface CompetitorPainPointsMatrixProps {
   data: ProductPainPoint[]
-  categoryFilter: 'all' | 'Physical' | 'Performance'
 }
 
 interface ProcessedDataPoint {
@@ -33,7 +32,7 @@ interface ProcessedDataPoint {
   z: number  // 气泡大小
 }
 
-export function CompetitorPainPointsMatrix({ data, categoryFilter }: CompetitorPainPointsMatrixProps) {
+export function CompetitorPainPointsMatrix({ data }: CompetitorPainPointsMatrixProps) {
   // 处理数据，转换为矩阵格式
   const processedData = useMemo(() => {
     if (!data || data.length === 0) return { chartData: [], products: [], categories: [], maxMentions: 1 }
@@ -124,6 +123,26 @@ export function CompetitorPainPointsMatrix({ data, categoryFilter }: CompetitorP
     )
   }
 
+  // 格式化产品名称，显示简短但有意义的名称
+  const formatProductName = (name: string) => {
+    // 提取主要品牌和型号信息
+    if (name.includes('Leviton D26HD')) return 'Leviton D26HD'
+    if (name.includes('Leviton D215S')) return 'Leviton D215S'  
+    if (name.includes('Lutron Caseta Diva')) return 'Lutron Caseta'
+    if (name.includes('TP Link Switch')) return 'TP Link'
+    if (name.includes('Lutron Diva')) return 'Lutron Diva'
+    // 如果都不匹配，显示前15个字符
+    return name.length > 15 ? name.substring(0, 15) + '...' : name
+  }
+
+  // 格式化分类名称，缩短过长的名称  
+  const formatCategoryName = (name: string) => {
+    if (name.length > 20) {
+      return name.substring(0, 20) + '...'
+    }
+    return name
+  }
+
   if (processedData.chartData.length === 0) {
     return (
       <Card>
@@ -134,18 +153,14 @@ export function CompetitorPainPointsMatrix({ data, categoryFilter }: CompetitorP
     )
   }
 
+  // 生成所有产品位置的ticks
+  const xAxisTicks = processedData.products.map((_, index) => index)
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>
-            Competitor Pain Points Matrix
-            {categoryFilter !== 'all' && (
-              <span className="text-sm font-normal text-gray-600 ml-2">
-                ({categoryFilter} Categories)
-              </span>
-            )}
-          </span>
+          <span>Competitor Pain Points Matrix</span>
           <div className="text-sm text-gray-600">
             {processedData.chartData.length} data points
           </div>
@@ -179,88 +194,51 @@ export function CompetitorPainPointsMatrix({ data, categoryFilter }: CompetitorP
         </div>
 
         {/* 图表 */}
-        <div className="h-[600px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart
-              data={processedData.chartData}
-              margin={{ top: 20, right: 30, bottom: 20, left: 20 }}
-            >
-              <XAxis
-                type="number"
-                dataKey="x"
-                domain={[-0.5, processedData.products.length - 0.5]}
-                tickFormatter={(value) => processedData.products[Math.round(value)] || ''}
-                interval={0}
-                angle={-45}
-                textAnchor="end"
-                height={120}
-                fontSize={10}
-              />
-              <YAxis
-                type="number"
-                dataKey="y"
-                domain={[-0.5, processedData.categories.length - 0.5]}
-                tickFormatter={(value) => {
-                  const category = processedData.categories[Math.round(value)]
-                  return category ? (category.length > 25 ? category.substring(0, 25) + '...' : category) : ''
-                }}
-                interval={0}
-                width={200}
-                fontSize={9}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Scatter
-                dataKey="z"
+        <div className="h-[700px] w-full flex justify-center">
+          <div className="w-full max-w-6xl">
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart
                 data={processedData.chartData}
-                shape={<CustomDot />}
-              />
-            </ScatterChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* 产品列表 */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h4 className="font-semibold text-sm text-gray-800 mb-3">Products Analyzed:</h4>
-          <div className="flex flex-wrap gap-2">
-            {processedData.products.map((product, index) => (
-              <span
-                key={product}
-                className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                margin={{ top: 40, right: 100, bottom: 160, left: 10 }}
               >
-                {product}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* 分类统计 */}
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-          <div className="p-3 bg-blue-50 rounded-lg">
-            <div className="font-semibold text-blue-800 mb-1">Most Mentioned</div>
-            <div className="text-blue-600">
-              {processedData.chartData.length > 0 
-                ? processedData.chartData.reduce((max, item) => item.mentions > max.mentions ? item : max).category
-                : 'N/A'
-              }
-            </div>
-          </div>
-          <div className="p-3 bg-green-50 rounded-lg">
-            <div className="font-semibold text-green-800 mb-1">Highest Satisfaction</div>
-            <div className="text-green-600">
-              {processedData.chartData.length > 0 
-                ? processedData.chartData.reduce((max, item) => item.satisfactionRate > max.satisfactionRate ? item : max).category
-                : 'N/A'
-              }
-            </div>
-          </div>
-          <div className="p-3 bg-red-50 rounded-lg">
-            <div className="font-semibold text-red-800 mb-1">Lowest Satisfaction</div>
-            <div className="text-red-600">
-              {processedData.chartData.length > 0 
-                ? processedData.chartData.reduce((min, item) => item.satisfactionRate < min.satisfactionRate ? item : min).category
-                : 'N/A'
-              }
-            </div>
+                <XAxis
+                  type="number"
+                  dataKey="x"
+                  domain={[-0.5, processedData.products.length - 0.5]}
+                  ticks={xAxisTicks}
+                  tickFormatter={(value) => {
+                    const productIndex = Math.round(value)
+                    const product = processedData.products[productIndex]
+                    return product ? formatProductName(product) : ''
+                  }}
+                  interval={0}
+                  angle={-45}
+                  textAnchor="end"
+                  height={140}
+                  fontSize={12}
+                  tick={{ fontSize: 12, fill: '#374151' }}
+                />
+                <YAxis
+                  type="number"
+                  dataKey="y"
+                  domain={[-0.5, processedData.categories.length - 0.5]}
+                  tickFormatter={(value) => {
+                    const category = processedData.categories[Math.round(value)]
+                    return category ? formatCategoryName(category) : ''
+                  }}
+                  interval={0}
+                  width={190}
+                  fontSize={12}
+                  tick={{ fontSize: 12, fill: '#374151' }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Scatter
+                  dataKey="z"
+                  data={processedData.chartData}
+                  shape={<CustomDot />}
+                />
+              </ScatterChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </CardContent>

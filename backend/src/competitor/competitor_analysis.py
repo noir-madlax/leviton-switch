@@ -43,35 +43,35 @@ class CompetitorAnalyzer:
         self.category_definitions = None
         self.product_mapping = None
         
-        # 定义6个目标产品的匹配规则
+        # 定义6个目标产品的精确ASIN匹配（用户提供的精确ASIN列表）
         self.target_products = {
             'Leviton D26HD': {
-                'keywords': ['d26hd', 'D26HD'],
+                'asins': ['B0BVKYKKRK'],
                 'brand': 'Leviton',
                 'type': 'Smart Dimmer'
             },
             'Leviton D215S': {
-                'keywords': ['d215s', 'D215S'],
+                'asins': ['B0BVKZLT3B'],
                 'brand': 'Leviton', 
                 'type': 'Smart Switch'
             },
             'Lutron Caseta Diva': {
-                'keywords': ['caseta', 'Caseta', 'diva smart', 'Diva Smart'],
+                'asins': ['B0BSHKS26L'],
                 'brand': 'Lutron',
                 'type': 'Smart Dimmer'
             },
             'TP Link Switch': {
-                'keywords': ['tp-link', 'TP-Link', 'tapo', 'Tapo', 'kasa', 'Kasa'],
+                'asins': ['B01EZV35QU'],
                 'brand': 'TP-Link',
                 'type': 'Smart Switch'
             },
             'Leviton DSL06': {
-                'keywords': ['dsl06', 'DSL06'],
+                'asins': ['B00NG0ELL0'],
                 'brand': 'Leviton',
                 'type': 'Traditional Dimmer'
             },
             'Lutron Diva': {
-                'keywords': ['diva led+', 'Diva LED+', 'dvcl-153p', 'DVCL-153P', 'dvsccl-153p', 'DVSCCL-153P'],
+                'asins': ['B085D8M2MR'],
                 'brand': 'Lutron',
                 'type': 'Traditional Dimmer'
             }
@@ -81,59 +81,55 @@ class CompetitorAnalyzer:
         self.product_pain_matrix = {}
         
     def load_product_mapping(self):
-        """加载产品数据并匹配目标产品"""
-        print("正在加载和匹配目标产品...")
+        """使用精确ASIN匹配加载目标产品数据"""
+        print("正在使用精确ASIN匹配目标产品...")
         
-        # 加载产品分类CSV文件
-        csv_file = self.data_dir.parent.parent / "product_segment/combined_products_cleaned/combined_products_with_final_categories.csv"
-        if not csv_file.exists():
-            raise FileNotFoundError(f"找不到产品分类文件: {csv_file}")
+        # 先加载expanded_review_results来获取实际评论数量
+        expanded_file = self.data_dir / "expanded_review_results.json"
+        if not expanded_file.exists():
+            raise FileNotFoundError(f"找不到文件: {expanded_file}")
         
-        # 读取CSV文件
-        df = pd.read_csv(csv_file)
+        with open(expanded_file, 'r', encoding='utf-8') as f:
+            expanded_data = json.load(f)
         
-        # 匹配目标产品
+        # 精确匹配目标产品的ASIN
         self.product_mapping = {}
         matched_products = {product: [] for product in self.target_products.keys()}
         
-        for _, row in df.iterrows():
-            asin = row['platform_id']
-            title = str(row.get('title', ''))
-            brand = str(row.get('brand', ''))
-            
-            # 尝试匹配每个目标产品
-            for product_name, criteria in self.target_products.items():
-                # 检查品牌匹配
-                if criteria['brand'].lower() not in brand.lower():
-                    continue
+        for product_name, criteria in self.target_products.items():
+            for target_asin in criteria['asins']:
+                if target_asin in expanded_data.get('results', {}):
+                    product_info = expanded_data['results'][target_asin]
+                    actual_reviews = product_info.get('total_reviews', 0)
                     
-                # 检查关键词匹配
-                title_lower = title.lower()
-                for keyword in criteria['keywords']:
-                    if keyword.lower() in title_lower:
-                        self.product_mapping[asin] = {
-                            'product_name': product_name,
-                            'title': title,
-                            'brand': brand,
-                            'type': criteria['type']
-                        }
-                        matched_products[product_name].append({
-                            'asin': asin,
-                            'title': title
-                        })
-                        break
+                    self.product_mapping[target_asin] = {
+                        'product_name': product_name,
+                        'title': product_info.get('product_title', ''),
+                        'brand': criteria['brand'],
+                        'type': criteria['type'],
+                        'total_reviews': actual_reviews
+                    }
+                    matched_products[product_name].append({
+                        'asin': target_asin,
+                        'title': product_info.get('product_title', ''),
+                        'total_reviews': actual_reviews
+                    })
+                else:
+                    print(f"⚠️  ASIN {target_asin} ({product_name}) 未在评论数据中找到")
         
         # 打印匹配结果
-        print("✓ 目标产品匹配结果:")
+        print("✓ 精确ASIN匹配结果 (实际评论数量):")
         for product_name, matches in matched_products.items():
-            print(f"  {product_name}: {len(matches)} 个产品")
-            for match in matches[:3]:  # 只显示前3个
-                print(f"    - {match['asin']}: {match['title'][:80]}...")
-            if len(matches) > 3:
-                print(f"    ... 还有 {len(matches)-3} 个产品")
+            if matches:
+                for match in matches:
+                    print(f"  {product_name}: {match['asin']} - {match['total_reviews']} reviews")
+                    print(f"    └─ {match['title'][:80]}...")
+            else:
+                print(f"  {product_name}: ❌ 未找到数据")
         
         total_matched = sum(len(matches) for matches in matched_products.values())
-        print(f"总计匹配到 {total_matched} 个目标产品")
+        total_reviews = sum(match['total_reviews'] for matches in matched_products.values() for match in matches)
+        print(f"总计精确匹配到 {total_matched} 个目标产品，总评论数: {total_reviews}")
         
     def load_data(self):
         """加载所需的数据文件"""
@@ -267,6 +263,22 @@ class CompetitorAnalyzer:
         print("✓ 各产品处理数量统计:")
         for product, count in processed_count.items():
             print(f"  {product}: {count} 个产品实例")
+        
+        # 添加分类处理统计
+        print("\n✓ 各产品发现的分类数量:")
+        total_categories_found = 0
+        for product_name, categories in self.product_pain_matrix.items():
+            category_count = len(categories)
+            total_categories_found += category_count
+            print(f"  {product_name}: {category_count} 个分类")
+            # 显示前5个分类作为示例
+            category_names = list(categories.keys())[:5]
+            if category_names:
+                print(f"    示例分类: {', '.join(category_names)}")
+                if len(categories) > 5:
+                    print(f"    ... 还有 {len(categories)-5} 个分类")
+        
+        print(f"\n总共发现 {total_categories_found} 个产品-分类组合")
             
     def calculate_satisfaction_rates(self):
         """计算每个产品-分类组合的满意度"""
@@ -298,9 +310,15 @@ class CompetitorAnalyzer:
         excluded_products = []
         valid_products = []
         
-        for product_name, categories in self.product_pain_matrix.items():
-            total_reviews = sum(data.get('total_reviews', 0) for data in categories.values())
-            if total_reviews < 5:  # 少于5条评论的产品排除
+        # 直接从product_mapping获取实际评论数量
+        for product_name in self.target_products.keys():
+            # 找到对应的ASIN并获取评论数量
+            product_total_reviews = 0
+            for asin, mapping in self.product_mapping.items():
+                if mapping['product_name'] == product_name:
+                    product_total_reviews += mapping.get('total_reviews', 0)
+            
+            if product_total_reviews < 5:  # 少于5条评论的产品排除
                 excluded_products.append(product_name)
             else:
                 valid_products.append(product_name)
@@ -322,18 +340,25 @@ class CompetitorAnalyzer:
                     category_stats[category_name]['total_reviews'] += data.get('total_reviews', 0)
                     category_stats[category_name]['total_mentions'] += data.get('mentions', 0)
         
-        # 筛选分类：至少在2个产品中出现，且总评论数>=5
+        # 筛选分类：降低门槛，允许更多分类通过
         valid_categories = []
         for category_name, stats in category_stats.items():
-            if stats['products'] >= 2 and stats['total_reviews'] >= 5:
+            # 放宽条件：只要在1个产品中出现且总评论数>=1即可
+            if stats['products'] >= 1 and stats['total_reviews'] >= 1:
                 valid_categories.append(category_name)
         
-        # 按总评论数排序，取前20个分类
+        # 按总评论数排序，增加到前50个分类
         valid_categories = sorted(valid_categories, 
                                 key=lambda x: category_stats[x]['total_reviews'], 
-                                reverse=True)[:20]
+                                reverse=True)[:50]
         
         print(f"✓ 筛选后的分类数量: {len(valid_categories)} (从原来的分类中筛选)")
+        print(f"✓ 分类详情:")
+        for cat in valid_categories[:10]:  # 显示前10个分类
+            stats = category_stats[cat]
+            print(f"    {cat}: {stats['products']}个产品, {stats['total_reviews']}个评论, {stats['total_mentions']}次提及")
+        if len(valid_categories) > 10:
+            print(f"    ... 还有{len(valid_categories)-10}个分类")
         
         # 为每个产品-分类组合生成数据点
         for product_name in valid_products:
@@ -349,8 +374,8 @@ class CompetitorAnalyzer:
                     'total_reviews': 0
                 })
                 
-                # 只包含有数据的点（包括0评论的，用于显示空白）
-                if data['mentions'] >= 1:  # 至少1次提及
+                # 降低要求：包含所有有mentions的数据，即使是0次提及也包含（用于完整性）
+                if data['mentions'] >= 0:  # 包含0次提及的数据
                     matrix_data.append({
                         'product': product_name,
                         'category': category_name,
@@ -372,10 +397,11 @@ class CompetitorAnalyzer:
         
         for product_name, categories in self.product_pain_matrix.items():
             for category_name, data in categories.items():
-                if data['mentions'] >= 1:
+                # 包含所有的数据点，不管mentions是否>=1
+                if data['mentions'] >= 0:  # 包含0次提及的数据
                     total_data_points += 1
                     total_mentions += data['mentions']
-                    if data['satisfaction_rate'] > 0:
+                    if data['total_reviews'] > 0:  # 只有真实评论的数据才计算满意度
                         satisfaction_rates.append(data['satisfaction_rate'])
         
         avg_satisfaction = sum(satisfaction_rates) / len(satisfaction_rates) if satisfaction_rates else 0
@@ -400,6 +426,15 @@ class CompetitorAnalyzer:
         # 按分类类型分组数据
         physical_data = [d for d in matrix_data if d['categoryType'] == 'Physical']
         performance_data = [d for d in matrix_data if d['categoryType'] == 'Performance']
+        
+        # 收集每个产品的实际总评论数
+        product_total_reviews = {}
+        for asin, mapping in self.product_mapping.items():
+            product_name = mapping['product_name']
+            total_reviews = mapping.get('total_reviews', 0)
+            if product_name not in product_total_reviews:
+                product_total_reviews[product_name] = 0
+            product_total_reviews[product_name] += total_reviews
         
         # 生成TypeScript代码
         ts_content = f'''// Competitor Analysis Data - 6个竞争产品的痛点对比分析
@@ -431,10 +466,14 @@ export interface CompetitorAnalysisData {{
   physicalData: ProductPainPoint[];     // 物理特性数据
   performanceData: ProductPainPoint[];  // 性能特性数据
   targetProducts: string[];             // 目标产品列表
+  productTotalReviews: Record<string, number>; // 每个产品的实际总评论数
 }}
 
 // 目标产品列表
 export const targetProducts = {json.dumps(list(self.target_products.keys()), indent=2, ensure_ascii=False)};
+
+// 每个产品的实际总评论数
+export const productTotalReviews = {json.dumps(product_total_reviews, indent=2, ensure_ascii=False)};
 
 // 汇总统计数据
 export const competitorSummary = {json.dumps(summary_stats, indent=2, ensure_ascii=False)};
@@ -455,7 +494,8 @@ export function getCompetitorAnalysisData(): CompetitorAnalysisData {{
     matrixData: competitorMatrixData,
     physicalData: physicalPainPoints,
     performanceData: performancePainPoints,
-    targetProducts: targetProducts
+    targetProducts: targetProducts,
+    productTotalReviews: productTotalReviews
   }};
 }}
 
