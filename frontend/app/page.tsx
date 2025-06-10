@@ -10,32 +10,34 @@ import { ReviewInsights } from "@/components/review-insights"
 import { CompetitorAnalysis } from "@/components/competitor-analysis"
 import { fetchDashboardData } from "@/lib/data"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ProductPanelProvider } from "@/lib/product-panel-context"
+import { ProductPanel } from "@/components/ui/product-panel"
 
 export default async function Home() {
   const data = await fetchDashboardData()
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="container mx-auto max-w-7xl bg-white p-6 md:p-8 rounded-lg shadow-md my-6">
-        <DashboardHeader />
-        
-        <Tabs defaultValue="market-analysis" className="mt-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="market-analysis">Market Analysis</TabsTrigger>
-            <TabsTrigger value="review-insights">Review Insights</TabsTrigger>
-            <TabsTrigger value="competitor-analysis">Competitor Analysis</TabsTrigger>
-          </TabsList>
+    <ProductPanelProvider>
+      <main className="min-h-screen bg-gray-50">
+        <div className="container mx-auto max-w-7xl bg-white p-6 md:p-8 rounded-lg shadow-md my-6">
+          <DashboardHeader />
           
-          <TabsContent value="market-analysis" className="mt-6">
+          <Tabs defaultValue="market-analysis" className="mt-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="market-analysis">Market Analysis</TabsTrigger>
+              <TabsTrigger value="review-insights">Review Insights</TabsTrigger>
+              <TabsTrigger value="competitor-analysis">Competitor Analysis</TabsTrigger>
+            </TabsList>
             
-            <BrandAnalysis data={data.brandAnalysis} />
-            <ProductAnalysis data={data.productAnalysis} />
-            <PricingAnalysis data={data.pricingAnalysis} />
-            <MarketInsights data={data.marketInsights} />
-            <PackagePreferenceAnalysis data={data.packagePreferenceAnalysis} />
-            
-          </TabsContent>
-          
+            <TabsContent value="market-analysis" className="mt-6">
+              
+              <BrandAnalysis data={data.brandAnalysis} productLists={data.productLists} />
+              <ProductAnalysis data={data.productAnalysis} />
+              <PricingAnalysis data={data.pricingAnalysis} productLists={data.productLists} />
+              <MarketInsights data={data.marketInsights} productLists={data.productLists} />
+              <PackagePreferenceAnalysis data={data.packagePreferenceAnalysis} productLists={data.productLists} />
+              
+            </TabsContent>  
           <TabsContent value="review-insights" className="mt-6">
             <ReviewInsights />
           </TabsContent>
@@ -43,20 +45,23 @@ export default async function Home() {
           <TabsContent value="competitor-analysis" className="mt-6">
             <CompetitorAnalysis />
           </TabsContent>
-        </Tabs>
+          </Tabs>
 
-        <div className="text-center text-gray-500 italic mt-8">
-          Report Generated:{" "}
-          {new Date().toLocaleDateString("en-US", {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-            hour12: true,
-          })}
+          <div className="text-center text-gray-500 italic mt-8">
+            Report Generated:{" "}
+            {new Date().toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+              hour12: true,
+            })}
+          </div>
         </div>
-      </div>
-    </main>
+        
+        <ProductPanel />
+      </main>
+    </ProductPanelProvider>
   )
 }

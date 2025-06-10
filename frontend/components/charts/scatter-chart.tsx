@@ -94,8 +94,23 @@ export function ScatterChart({
     "TP-Link": "#4ECDC4",
   }
 
+  const handleDotClick = (data: any) => {
+    if (data && data.url) {
+      window.open(data.url, '_blank', 'noopener,noreferrer')
+    }
+  }
+
   const renderScatter = (data: any[], name: string, fill: string) => {
-    return <Scatter name={name} data={data} fill={fill} shape="circle" legendType="circle" isAnimationActive={false} />
+    return <Scatter 
+      name={name} 
+      data={data} 
+      fill={fill} 
+      shape="circle" 
+      legendType="circle" 
+      isAnimationActive={false}
+      onClick={handleDotClick}
+      style={{ cursor: 'pointer' }}
+    />
   }
 
   // Group data by brand for better visualization

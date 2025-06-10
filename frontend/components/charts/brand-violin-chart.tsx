@@ -12,6 +12,7 @@ interface BrandViolinChartProps {
   }[]
   priceType: PriceType
   category: string
+  onViolinClick?: (brand: string) => void
 }
 
 interface ChartRendererProps extends BrandViolinChartProps {
@@ -79,7 +80,7 @@ function lightenColor(color: string, percent: number): string {
   return color
 }
 
-function ChartRenderer({ brands, priceType, category, width = 800, height = 370 }: ChartRendererProps) {
+function ChartRenderer({ brands, priceType, category, width = 800, height = 370, onViolinClick }: ChartRendererProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [hoverState, setHoverState] = useState<HoverState>({
     visible: false,
@@ -226,6 +227,20 @@ function ChartRenderer({ brands, priceType, category, width = 800, height = 370 
     setHoverState(prev => ({ ...prev, visible: false }))
   }
 
+  const handleClick = (event: React.MouseEvent<SVGSVGElement>) => {
+    if (!svgRef.current || !onViolinClick) return
+
+    const rect = svgRef.current.getBoundingClientRect()
+    const svgX = event.clientX - rect.left
+    const x = (svgX / rect.width) * layout.width
+    const brandIndex = Math.floor((x - layout.marginLeft) / brandWidth)
+
+    if (brandIndex >= 0 && brandIndex < brandData.length) {
+      const brand = brandData[brandIndex]
+      onViolinClick(brand.name)
+    }
+  }
+
   if (layout.chartHeight <= 0) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -247,9 +262,10 @@ function ChartRenderer({ brands, priceType, category, width = 800, height = 370 
       <svg 
         ref={svgRef}
         viewBox={`0 0 ${layout.width} ${layout.height}`} 
-        className="w-full h-full cursor-crosshair"
+        className="w-full h-full cursor-pointer"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        onClick={handleClick}
       >
         <rect width={layout.width} height={layout.height} fill="#f8fafc" />
 
@@ -400,10 +416,10 @@ function ChartRenderer({ brands, priceType, category, width = 800, height = 370 
   )
 }
 
-export function BrandViolinChart({ brands, priceType, category }: BrandViolinChartProps) {
+export function BrandViolinChart({ brands, priceType, category, onViolinClick }: BrandViolinChartProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <ChartRenderer brands={brands} priceType={priceType} category={category} />
+      <ChartRenderer brands={brands} priceType={priceType} category={category} onViolinClick={onViolinClick} />
     </ResponsiveContainer>
   )
 }

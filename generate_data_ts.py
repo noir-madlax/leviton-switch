@@ -336,10 +336,164 @@ def create_product_list(df: pd.DataFrame, category: str, limit: int = 20) -> Lis
             "revenue": int(row['revenue']) if not pd.isna(row['revenue']) else 0,
             "volume": int(row['volume']) if not pd.isna(row['volume']) else 0,
             "url": row['product_url'] if not pd.isna(row['product_url']) else "",
+            "category": category,
+            "productSegment": row['product_segment'] if not pd.isna(row['product_segment']) else "",
+            "packCount": int(row['pack_count']) if not pd.isna(row['pack_count']) else 1,
         }
         products.append(product)
     
     return products
+
+def create_brand_product_lists(dimmer_df: pd.DataFrame, switch_df: pd.DataFrame) -> Dict:
+    """Create product lists grouped by brand for filtering"""
+    
+    # Get all unique brands
+    all_brands = set(dimmer_df['clean_brand'].unique()) | set(switch_df['clean_brand'].unique())
+    
+    brand_products = {}
+    for brand in all_brands:
+        dimmer_products = dimmer_df[dimmer_df['clean_brand'] == brand]
+        switch_products = switch_df[switch_df['clean_brand'] == brand]
+        
+        combined_products = []
+        
+        # Add dimmer products
+        for _, row in dimmer_products.iterrows():
+            product = {
+                "id": f"d_{len(combined_products) + 1}",
+                "name": row['clean_title'],
+                "brand": row['clean_brand'],
+                "price": float(row['price_usd']) if not pd.isna(row['price_usd']) else 0.0,
+                "unitPrice": float(row['unit_price']) if not pd.isna(row['unit_price']) else float(row['price_usd']) if not pd.isna(row['price_usd']) else 0.0,
+                "revenue": int(row['revenue']) if not pd.isna(row['revenue']) else 0,
+                "volume": int(row['volume']) if not pd.isna(row['volume']) else 0,
+                "url": row['product_url'] if not pd.isna(row['product_url']) else "",
+                "category": "Dimmer Switches",
+                "productSegment": row['product_segment'] if not pd.isna(row['product_segment']) else "",
+                "packCount": int(row['pack_count']) if not pd.isna(row['pack_count']) else 1,
+            }
+            combined_products.append(product)
+        
+        # Add switch products
+        for _, row in switch_products.iterrows():
+            product = {
+                "id": f"s_{len(combined_products) + 1}",
+                "name": row['clean_title'],
+                "brand": row['clean_brand'],
+                "price": float(row['price_usd']) if not pd.isna(row['price_usd']) else 0.0,
+                "unitPrice": float(row['unit_price']) if not pd.isna(row['unit_price']) else float(row['price_usd']) if not pd.isna(row['price_usd']) else 0.0,
+                "revenue": int(row['revenue']) if not pd.isna(row['revenue']) else 0,
+                "volume": int(row['volume']) if not pd.isna(row['volume']) else 0,
+                "url": row['product_url'] if not pd.isna(row['product_url']) else "",
+                "category": "Light Switches",
+                "productSegment": row['product_segment'] if not pd.isna(row['product_segment']) else "",
+                "packCount": int(row['pack_count']) if not pd.isna(row['pack_count']) else 1,
+            }
+            combined_products.append(product)
+        
+        # Sort by revenue and store
+        combined_products.sort(key=lambda x: x['revenue'], reverse=True)
+        brand_products[brand] = combined_products
+    
+    return brand_products
+
+def create_segment_product_lists(dimmer_df: pd.DataFrame, switch_df: pd.DataFrame) -> Dict:
+    """Create product lists grouped by product segment for filtering"""
+    
+    segment_products = {}
+    
+    # Process dimmer segments
+    for segment in dimmer_df['product_segment'].unique():
+        if pd.isna(segment):
+            continue
+        segment_data = dimmer_df[dimmer_df['product_segment'] == segment]
+        
+        products = []
+        for _, row in segment_data.iterrows():
+            product = {
+                "id": f"ds_{len(products) + 1}",
+                "name": row['clean_title'],
+                "brand": row['clean_brand'],
+                "price": float(row['price_usd']) if not pd.isna(row['price_usd']) else 0.0,
+                "unitPrice": float(row['unit_price']) if not pd.isna(row['unit_price']) else float(row['price_usd']) if not pd.isna(row['price_usd']) else 0.0,
+                "revenue": int(row['revenue']) if not pd.isna(row['revenue']) else 0,
+                "volume": int(row['volume']) if not pd.isna(row['volume']) else 0,
+                "url": row['product_url'] if not pd.isna(row['product_url']) else "",
+                "category": "Dimmer Switches",
+                "productSegment": row['product_segment'] if not pd.isna(row['product_segment']) else "",
+                "packCount": int(row['pack_count']) if not pd.isna(row['pack_count']) else 1,
+            }
+            products.append(product)
+        
+        products.sort(key=lambda x: x['revenue'], reverse=True)
+        segment_products[segment] = products
+    
+    # Process switch segments
+    for segment in switch_df['product_segment'].unique():
+        if pd.isna(segment):
+            continue
+        segment_data = switch_df[switch_df['product_segment'] == segment]
+        
+        products = []
+        for _, row in segment_data.iterrows():
+            product = {
+                "id": f"ss_{len(products) + 1}",
+                "name": row['clean_title'],
+                "brand": row['clean_brand'],
+                "price": float(row['price_usd']) if not pd.isna(row['price_usd']) else 0.0,
+                "unitPrice": float(row['unit_price']) if not pd.isna(row['unit_price']) else float(row['price_usd']) if not pd.isna(row['price_usd']) else 0.0,
+                "revenue": int(row['revenue']) if not pd.isna(row['revenue']) else 0,
+                "volume": int(row['volume']) if not pd.isna(row['volume']) else 0,
+                "url": row['product_url'] if not pd.isna(row['product_url']) else "",
+                "category": "Light Switches",
+                "productSegment": row['product_segment'] if not pd.isna(row['product_segment']) else "",
+                "packCount": int(row['pack_count']) if not pd.isna(row['pack_count']) else 1,
+            }
+            products.append(product)
+        
+        products.sort(key=lambda x: x['revenue'], reverse=True)
+        segment_products[segment] = products
+    
+    return segment_products
+
+def create_package_size_product_lists(dimmer_df: pd.DataFrame, switch_df: pd.DataFrame) -> Dict:
+    """Create product lists grouped by package size for filtering"""
+    
+    package_products = {}
+    
+    # Combine both dataframes for package analysis
+    combined_df = pd.concat([dimmer_df, switch_df], ignore_index=True)
+    
+    # Define pack size categories
+    bins = [0, 1, 3, 9, float('inf')]
+    labels = ["1 Pack", "2-3 Pack", "4-9 Pack", "10+ Pack"]
+    
+    combined_df['pack_size_category'] = pd.cut(combined_df['pack_count'], bins=bins, labels=labels, right=True)
+    
+    for pack_category in labels:
+        category_data = combined_df[combined_df['pack_size_category'] == pack_category]
+        
+        products = []
+        for _, row in category_data.iterrows():
+            product = {
+                "id": f"ps_{len(products) + 1}",
+                "name": row['clean_title'],
+                "brand": row['clean_brand'],
+                "price": float(row['price_usd']) if not pd.isna(row['price_usd']) else 0.0,
+                "unitPrice": float(row['unit_price']) if not pd.isna(row['unit_price']) else float(row['price_usd']) if not pd.isna(row['price_usd']) else 0.0,
+                "revenue": int(row['revenue']) if not pd.isna(row['revenue']) else 0,
+                "volume": int(row['volume']) if not pd.isna(row['volume']) else 0,
+                "url": row['product_url'] if not pd.isna(row['product_url']) else "",
+                "category": row['category'],
+                "productSegment": row['product_segment'] if not pd.isna(row['product_segment']) else "",
+                "packCount": int(row['pack_count']) if not pd.isna(row['pack_count']) else 1,
+            }
+            products.append(product)
+        
+        products.sort(key=lambda x: x['revenue'], reverse=True)
+        package_products[pack_category] = products
+    
+    return package_products
 
 def calculate_brand_metrics(df: pd.DataFrame) -> List[Dict]:
     """Calculate brand performance metrics"""
@@ -692,6 +846,11 @@ def generate_data_ts(csv_path: str, output_path: str):
     dimmer_products = create_product_list(dimmer_df, "Dimmer Switches", 15)
     switch_products = create_product_list(switch_df, "Light Switches", 15)
     
+    # Create filtered product lists for interactivity
+    brand_product_lists = create_brand_product_lists(dimmer_df, switch_df)
+    segment_product_lists = create_segment_product_lists(dimmer_df, switch_df)
+    package_size_product_lists = create_package_size_product_lists(dimmer_df, switch_df)
+    
     # Calculate metrics
     executive_summary = calculate_executive_summary(all_df, dimmer_df, switch_df)
     brand_category_revenue = calculate_brand_category_revenue(dimmer_df, switch_df)
@@ -736,7 +895,12 @@ export async function fetchDashboardData() {{
     pricingAnalysis: {json.dumps(pricing_analysis, indent=6)},
     packagePreferenceAnalysis: {json.dumps(package_preference_analysis, indent=6)},
     marketInsights: {json.dumps(market_insights, indent=6)},
-    summaryMetrics: {json.dumps(summary_metrics, indent=6)}
+    summaryMetrics: {json.dumps(summary_metrics, indent=6)},
+    productLists: {{
+      byBrand: {json.dumps(brand_product_lists, indent=8)},
+      bySegment: {json.dumps(segment_product_lists, indent=8)},
+      byPackageSize: {json.dumps(package_size_product_lists, indent=8)}
+    }}
   }};
 }}
 '''

@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { GroupedBarChart } from "@/components/charts/grouped-bar-chart"
 import { MetricTypeSelector, type MetricType } from "@/components/metric-type-selector"
+import { useProductPanel } from "@/lib/product-panel-context"
 
 interface SegmentData {
   segment: string
@@ -19,6 +20,11 @@ interface MarketInsightsProps {
       lightSwitches: SegmentData[]
     }
   }
+  productLists: {
+    byBrand: Record<string, any[]>
+    bySegment: Record<string, any[]>
+    byPackageSize: Record<string, any[]>
+  }
 }
 
 // Color palette for segments
@@ -28,8 +34,9 @@ const segmentColors = [
   "#8E44AD", "#27AE60", "#D35400", "#2980B9", "#C0392B"
 ]
 
-export function MarketInsights({ data }: MarketInsightsProps) {
+export function MarketInsights({ data, productLists }: MarketInsightsProps) {
   const [metricType, setMetricType] = useState<MetricType>("revenue")
+  const { openPanel } = useProductPanel()
 
   // Helper function to wrap long text
   const wrapText = (text: string, maxLength: number = 15) => {
@@ -119,6 +126,50 @@ export function MarketInsights({ data }: MarketInsightsProps) {
     ? (value: number) => `$${value.toLocaleString()}`
     : (value: number) => `${value.toLocaleString()}`
 
+  const handleBarClick = (clickData: any) => {
+    if (clickData && clickData.activeLabel) {
+      // Get the original segment name by finding it in the data
+      const segmentName = clickData.activeLabel
+      
+      // Find the original segment name from the display name
+      let originalSegmentName = ''
+      for (const segment of [...data.segmentRevenue.dimmerSwitches, ...data.segmentRevenue.lightSwitches]) {
+        const displayName = segment.segment
+          .replace(" Switches", " Switch")
+          .replace("Smart Wi-Fi Enabled", "Wi-Fi Smart")
+          .replace("Smart Hub-Dependent", "Hub-Dependent Smart")
+          .replace("Fan and Light Combination", "Fan+Light")
+          .replace("Incandescent Compatible", "Incandescent")
+          .replace("Handheld Remote Control", "Remote")
+          .replace("WiFi Connected Smart", "WiFi Smart")
+          .replace("Three Way Multi-Location", "3-Way Multi-Location")
+          .replace("Smart Hub Dependent", "Hub-Dependent Smart")
+          .replace("Multi-Function Combination", "Multi-Function")
+          .replace("RF Wireless Remote Control", "RF Remote Control")
+          .replace("LED Illuminated Indicator", "LED Indicator")
+          .replace("Four Way Multi-Location", "4-Way Multi-Location")
+          .replace("High Amperage Rocker", "High Amp Rocker")
+          .replace("Switch Outlet Combination Devices", "Switch+Outlet")
+          .replace("Add On Auxiliary", "Auxiliary")
+          .replace("Multi-Feature Combination Control", "Multi-Feature")
+          .replace("Inline Cord Control", "Inline Cord")
+
+        if (wrapText(displayName, 12) === segmentName) {
+          originalSegmentName = segment.segment
+          break
+        }
+      }
+
+      const products = productLists.bySegment[originalSegmentName] || []
+      openPanel(
+        products,
+        `${originalSegmentName}`,
+        `Products in the ${originalSegmentName} segment`,
+        { brand: true, category: false, priceRange: true, packSize: true }
+      )
+    }
+  }
+
   return (
     <section className="mb-10">
       <h2 className="text-2xl font-bold text-gray-800 border-l-4 border-blue-500 pl-4 mb-6">📊 Market Insights</h2>
@@ -147,6 +198,7 @@ export function MarketInsights({ data }: MarketInsightsProps) {
               yAxisLabel={yAxisLabel}
               xAxisLabel="Product Segment"
               metricType={metricType}
+              onBarClick={handleBarClick}
             />
           </div>
         </Card>
@@ -170,6 +222,7 @@ export function MarketInsights({ data }: MarketInsightsProps) {
               yAxisLabel={yAxisLabel}
               xAxisLabel="Product Segment"
               metricType={metricType}
+              onBarClick={handleBarClick}
             />
           </div>
         </Card>

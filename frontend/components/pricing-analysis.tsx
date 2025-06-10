@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { ViolinChart } from "@/components/charts/violin-chart"
 import { BrandViolinChart } from "@/components/charts/brand-violin-chart"
 import { PriceTypeSelector, type PriceType } from "@/components/price-type-selector"
+import { useProductPanel } from "@/lib/product-panel-context"
 
 interface PricingAnalysisProps {
   data: {
@@ -40,10 +41,16 @@ interface PricingAnalysisProps {
       }[]
     }[]
   }
+  productLists: {
+    byBrand: Record<string, any[]>
+    bySegment: Record<string, any[]>
+    byPackageSize: Record<string, any[]>
+  }
 }
 
-export function PricingAnalysis({ data }: PricingAnalysisProps) {
+export function PricingAnalysis({ data, productLists }: PricingAnalysisProps) {
   const [priceType, setPriceType] = useState<PriceType>("unit")
+  const { openPanel } = useProductPanel()
 
   // Add error handling for data access
   const getPrices = (category: number) => {
@@ -81,6 +88,46 @@ export function PricingAnalysis({ data }: PricingAnalysisProps) {
     return data.brandPriceDistribution[category].brands
   }
 
+  const handleViolinClick = (category: string, priceRange: { min: number; max: number }) => {
+    // Calculate the center price and use the same tolerance as tooltip (±5%)
+    const centerPrice = (priceRange.min + priceRange.max) / 2
+    const tolerancePercent = 0.05  // 5% tolerance to match tooltip
+    const tolerance = centerPrice * tolerancePercent
+    
+    // Filter products by category and price range using same logic as tooltip
+    const allProducts = [
+      ...Object.values(productLists.byBrand).flat(),
+    ].filter(product => {
+      const matchesCategory = product.category === category
+      const price = priceType === 'unit' ? product.unitPrice : product.price
+      const inRange = Math.abs(price - centerPrice) <= tolerance
+      
+      console.log(`Product: ${product.name}, Category: ${product.category}, Price: ${price}, Center: ${centerPrice}, Tolerance: ±${tolerance.toFixed(2)} (${tolerancePercent*100}%), Matches: ${matchesCategory && inRange}`)
+      
+      return matchesCategory && inRange
+    })
+
+    console.log(`Total products found: ${allProducts.length}`)
+    console.log('Filtered products:', allProducts.map(p => `${p.name} - ${p.category} - Unit: $${p.unitPrice}`))
+
+    openPanel(
+      allProducts,
+      `${category}: $${(centerPrice - tolerance).toFixed(2)} - $${(centerPrice + tolerance).toFixed(2)}`,
+      `${allProducts.length} products found in ${category} with ${priceType === 'unit' ? 'unit' : 'SKU'} price within ±${tolerancePercent*100}% of $${centerPrice.toFixed(2)}`,
+      { brand: true, category: false, priceRange: false, packSize: true }
+    )
+  }
+
+  const handleBrandViolinClick = (brand: string) => {
+    const products = productLists.byBrand[brand] || []
+    openPanel(
+      products,
+      `${brand} Products`,
+      `All products from ${brand}`,
+      { brand: false, category: true, priceRange: true, packSize: true }
+    )
+  }
+
   // Check if we have the required data
   if (!data?.priceDistribution || data.priceDistribution.length < 2) {
     return (
@@ -107,6 +154,10 @@ export function PricingAnalysis({ data }: PricingAnalysisProps) {
             dimmerStats={getStats(0)}
             switchStats={getStats(1)}
             priceType={priceType}
+            onViolinClick={(category, priceRange) => {
+              console.log('handleViolinClick called from PricingAnalysis')
+              handleViolinClick(category, priceRange)
+            }}
           />
         </div>
       </Card>
@@ -118,13 +169,13 @@ export function PricingAnalysis({ data }: PricingAnalysisProps) {
           <div className="w-full">
             <h4 className="text-lg font-medium mb-3 text-center">🔆 Dimmer Switches</h4>
             <div className="h-[320px] w-full">
-              <BrandViolinChart brands={getBrands(0)} priceType={priceType} category="Dimmer Switches" />
+              <BrandViolinChart brands={getBrands(0)} priceType={priceType} category="Dimmer Switches" onViolinClick={handleBrandViolinClick} />
             </div>
           </div>
           <div className="w-full">
             <h4 className="text-lg font-medium mb-3 text-center">💡 Light Switches</h4>
             <div className="h-[320px] w-full">
-              <BrandViolinChart brands={getBrands(1)} priceType={priceType} category="Light Switches" />
+              <BrandViolinChart brands={getBrands(1)} priceType={priceType} category="Light Switches" onViolinClick={handleBrandViolinClick} />
             </div>
           </div>
         </div>

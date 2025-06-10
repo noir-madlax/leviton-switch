@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from 'recharts'
 import { MetricTypeSelector, type MetricType } from "@/components/metric-type-selector"
+import { useProductPanel } from "@/lib/product-panel-context"
 
 interface PackagePreferenceData {
   sameProductComparison: {
@@ -35,8 +36,19 @@ interface PackagePreferenceData {
   }[];
 }
 
-export function PackagePreferenceAnalysis({ data }: { data: PackagePreferenceData }) {
+export function PackagePreferenceAnalysis({ 
+  data, 
+  productLists 
+}: { 
+  data: PackagePreferenceData
+  productLists: {
+    byBrand: Record<string, any[]>
+    bySegment: Record<string, any[]>
+    byPackageSize: Record<string, any[]>
+  }
+}) {
   const [metricType, setMetricType] = useState<MetricType>("revenue")
+  const { openPanel } = useProductPanel()
 
   // Gentle, pastel color palette
   const colors = [
@@ -73,6 +85,19 @@ export function PackagePreferenceAnalysis({ data }: { data: PackagePreferenceDat
 
   const titleSuffix = metricType === "revenue" ? "Revenue" : "Volume (Packages Sold)"
   const valueLabel = metricType === "revenue" ? "Revenue ($)" : "Volume (Packages Sold)"
+
+  const handlePieClick = (data: any) => {
+    if (data && data.name) {
+      const packSize = data.name
+      const products = productLists.byPackageSize[packSize] || []
+      openPanel(
+        products,
+        `${packSize} Products`,
+        `All products sold in ${packSize} packages`,
+        { brand: true, category: true, priceRange: true, packSize: false }
+      )
+    }
+  }
 
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }: any) => {
     const RADIAN = Math.PI / 180
@@ -158,6 +183,7 @@ export function PackagePreferenceAnalysis({ data }: { data: PackagePreferenceDat
                   outerRadius={120}
                   fill="#8884d8"
                   dataKey="value"
+                  onClick={handlePieClick}
                 >
                   {getDimmerChartData().map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
@@ -192,6 +218,7 @@ export function PackagePreferenceAnalysis({ data }: { data: PackagePreferenceDat
                   outerRadius={120}
                   fill="#8884d8"
                   dataKey="value"
+                  onClick={handlePieClick}
                 >
                   {getSwitchChartData().map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />

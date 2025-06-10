@@ -11,6 +11,7 @@ interface GroupedBarChartProps {
   yAxisLabel?: string
   xAxisLabel?: string
   metricType?: "revenue" | "volume"
+  onBarClick?: (data: any) => void
 }
 
 export function GroupedBarChart({
@@ -21,6 +22,7 @@ export function GroupedBarChart({
   yAxisLabel,
   xAxisLabel,
   metricType = "revenue",
+  onBarClick,
 }: GroupedBarChartProps) {
   const formatValue = (value: number) => {
     return metricType === "revenue" ? `$${value.toLocaleString()}` : value.toLocaleString()
@@ -109,6 +111,7 @@ export function GroupedBarChart({
           left: 100, // Increased to prevent Y-axis overlap
           bottom: bottomMargin,
         }}
+        onClick={onBarClick}
       >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis

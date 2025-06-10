@@ -20,6 +20,12 @@ export function HorizontalBarChart({ data, colors, valueLabel, metricType = "rev
     return metricType === "revenue" ? `$${value.toLocaleString()}` : value.toLocaleString()
   }
 
+  const handleBarClick = (data: any) => {
+    if (data && data.activePayload && data.activePayload[0] && data.activePayload[0].payload.url) {
+      window.open(data.activePayload[0].payload.url, '_blank', 'noopener,noreferrer')
+    }
+  }
+
   // Function to lighten a color
   const lightenColor = (color: string, amount: number = 0.4) => {
     // Handle rgb() format
@@ -62,6 +68,7 @@ export function HorizontalBarChart({ data, colors, valueLabel, metricType = "rev
           left: 150,
           bottom: 5,
         }}
+        onClick={handleBarClick}
       >
         <CartesianGrid strokeDasharray="3 3" horizontal={false} />
         <XAxis

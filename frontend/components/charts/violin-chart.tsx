@@ -24,6 +24,7 @@ interface ViolinChartProps {
     max: number
   }
   priceType?: PriceType
+  onViolinClick?: (category: string, priceRange: { min: number; max: number }) => void
 }
 
 interface HoverState {
@@ -66,7 +67,8 @@ function normalizeDensity(densityData: [number, number][], maxHeight: number): [
 }
 
 // Function to count products within a price range
-function countProductsInRange(prices: number[], targetPrice: number, tolerance: number = 5): number {
+function countProductsInRange(prices: number[], targetPrice: number, tolerancePercent: number = 0.05): number {
+  const tolerance = targetPrice * tolerancePercent
   return prices.filter(price => Math.abs(price - targetPrice) <= tolerance).length
 }
 
@@ -93,6 +95,7 @@ export function ViolinChart({
   dimmerStats,
   switchStats,
   priceType = "sku",
+  onViolinClick,
 }: ViolinChartProps) {
   const [hoverState, setHoverState] = useState<HoverState>({
     x: 0,
@@ -174,6 +177,58 @@ export function ViolinChart({
     setHoverState(prev => ({ ...prev, visible: false }))
   }
 
+  const handleClick = (event: React.MouseEvent<SVGSVGElement>) => {
+    console.log('Violin chart clicked!')
+    
+    if (!svgRef.current) {
+      console.log('No SVG ref')
+      return
+    }
+    
+    if (!onViolinClick) {
+      console.log('No onViolinClick handler provided')
+      return
+    }
+    
+    const rect = svgRef.current.getBoundingClientRect()
+    const svgX = ((event.clientX - rect.left) / rect.width) * 600
+    const svgY = ((event.clientY - rect.top) / rect.height) * 400
+    
+    console.log(`Click position: svgX=${svgX}, svgY=${svgY}`)
+    
+    // Check if we're within the chart area
+    if (svgX >= 80 && svgX <= 520 && svgY >= 50 && svgY <= 350) {
+      console.log('Click is within chart area')
+      
+      // Convert SVG coordinates to price
+      const price = ((350 - svgY) / 300) * maxPrice
+      console.log(`Calculated price: ${price.toFixed(2)}`)
+      
+      // Determine which violin we clicked
+      const isDimmerClick = svgX >= 120 && svgX <= 280 // Dimmer violin area
+      const isSwitchClick = svgX >= 320 && svgX <= 480 // Switch violin area
+      
+      console.log(`isDimmerClick: ${isDimmerClick}, isSwitchClick: ${isSwitchClick}`)
+      
+      if (isDimmerClick || isSwitchClick) {
+        // Create a very narrow price range around the clicked price (±$1 or ±3% whichever is smaller)
+        const tolerance = Math.min(price * 0.03, 1)
+        const priceRange = {
+          min: Math.max(0, price - tolerance),
+          max: price + tolerance
+        }
+        
+        const category = isDimmerClick ? "Dimmer Switches" : "Light Switches"
+        console.log(`Violin click - Category: ${category}, Price: ${price.toFixed(2)}, Range: ${priceRange.min.toFixed(2)} - ${priceRange.max.toFixed(2)}`)
+        onViolinClick(category, priceRange)
+      } else {
+        console.log('Click not on any violin')
+      }
+    } else {
+      console.log('Click outside chart area')
+    }
+  }
+
   // Calculate crosshair width based on violin density
   const getDimmerWidth = (price: number) => getDensityWidth(dimmerDensity, price)
   const getSwitchWidth = (price: number) => getDensityWidth(switchDensity, price)
@@ -186,9 +241,13 @@ export function ViolinChart({
           <svg 
             ref={svgRef}
             viewBox="0 0 600 400" 
-            className="w-full h-full"
+            className="w-full h-full cursor-pointer"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
+            onClick={(e) => {
+              console.log('Direct SVG click detected')
+              handleClick(e)
+            }}
           >
             {/* Background */}
             <rect width="600" height="400" fill="#f8fafc" />
@@ -391,14 +450,18 @@ export function ViolinChart({
               Price: ${hoverState.price.toFixed(2)}
             </div>
             <div className="text-xs text-gray-600 mt-1">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-400 rounded-sm"></div>
-                Dimmers: {hoverState.dimmerProducts} products
-              </div>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="w-3 h-3 bg-cyan-400 rounded-sm"></div>
-                Switches: {hoverState.switchProducts} products
-              </div>
+              {hoverState.isDimmerHover && (
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-400 rounded-sm"></div>
+                  Dimmers: {hoverState.dimmerProducts} products
+                </div>
+              )}
+              {hoverState.isSwitchHover && (
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-cyan-400 rounded-sm"></div>
+                  Switches: {hoverState.switchProducts} products
+                </div>
+              )}
             </div>
           </div>
         )}

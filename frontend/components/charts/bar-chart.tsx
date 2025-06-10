@@ -19,6 +19,7 @@ interface BarChartProps {
   yAxisLabel?: string
   xAxisLabel?: string
   metricType?: "revenue" | "volume"
+  onBarClick?: (data: any) => void
 }
 
 export function BarChart({
@@ -29,6 +30,7 @@ export function BarChart({
   yAxisLabel,
   xAxisLabel,
   metricType = "revenue",
+  onBarClick,
 }: BarChartProps) {
   const formatValue = (value: number) => {
     return metricType === "revenue" ? `$${value.toLocaleString()}` : value.toLocaleString()
@@ -44,6 +46,7 @@ export function BarChart({
           left: 90,
           bottom: 20,
         }}
+        onClick={onBarClick}
       >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis
