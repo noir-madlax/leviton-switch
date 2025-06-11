@@ -12,6 +12,8 @@ import {
   Cell
 } from "recharts"
 import { ProductPainPoint, getSatisfactionColor, getUseCaseAnalysisData } from "@/lib/competitorAnalysis"
+import { useReviewPanel } from "@/lib/review-panel-context"
+import { allReviewData } from "@/lib/reviewData"
 
 interface CustomerSentimentBarProps {
   data: ProductPainPoint[]
@@ -28,6 +30,32 @@ interface SentimentData {
 }
 
 export function CustomerSentimentBar({ data, productTotalReviews }: CustomerSentimentBarProps) {
+  const { openPanel } = useReviewPanel()
+  
+  const handleBarClick = (sentimentData: SentimentData) => {
+    // Get all reviews for this product across all categories
+    const productBrand = sentimentData.product.split(' ')[0]
+    
+    // Collect all reviews for this product from all categories
+    const allProductReviews: any[] = []
+    Object.entries(allReviewData).forEach(([category, reviews]) => {
+      const productReviews = reviews.filter(review => 
+        review.brand === productBrand || 
+        review.text.toLowerCase().includes(sentimentData.product.toLowerCase())
+      )
+      allProductReviews.push(...productReviews)
+    })
+    
+    if (allProductReviews.length === 0) return
+    
+    openPanel(
+      allProductReviews,
+      `${sentimentData.product} Reviews`,
+      `All reviews • ${sentimentData.totalReviews} total • ${sentimentData.avgSatisfactionRate}% avg satisfaction`,
+      { sentiment: true, brand: true, rating: true, verified: true }
+    )
+  }
+  
   const sentimentData = useMemo(() => {
     if (!data || data.length === 0) return []
 
@@ -222,7 +250,12 @@ export function CustomerSentimentBar({ data, productTotalReviews }: CustomerSent
                 label={{ value: 'Total Reviews', angle: -90, position: 'insideLeft' }}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="totalReviews" radius={[4, 4, 0, 0]}>
+              <Bar 
+                dataKey="totalReviews" 
+                radius={[4, 4, 0, 0]}
+                onClick={(data) => handleBarClick(data)}
+                style={{ cursor: 'pointer' }}
+              >
                 {sentimentData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}

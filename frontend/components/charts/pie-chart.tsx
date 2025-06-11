@@ -1,6 +1,7 @@
 "use client"
 
 import { PieChart as ReChartsPie, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
+import { useProductPanel } from "@/lib/product-panel-context"
 
 interface PieChartProps {
   data: {
@@ -13,6 +14,15 @@ interface PieChartProps {
 }
 
 export function PieChart({ data, title, colors = ["#FF6B6B", "#4ECDC4"], annotation }: PieChartProps) {
+  const { openPanel } = useProductPanel()
+  
+  const handleSliceClick = (data: any) => {
+    // Since pie charts are typically high-level category data, 
+    // we'll just log the click for now - specific implementations 
+    // can override this behavior
+    console.log('Pie slice clicked:', data)
+  }
+  
   return (
     <ResponsiveContainer width="100%" height="100%">
       <ReChartsPie
@@ -45,6 +55,8 @@ export function PieChart({ data, title, colors = ["#FF6B6B", "#4ECDC4"], annotat
           fill="#8884d8"
           dataKey="value"
           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+          onClick={handleSliceClick}
+          style={{ cursor: 'pointer' }}
         >
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />

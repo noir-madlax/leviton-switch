@@ -1,6 +1,7 @@
 "use client"
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
+import { useProductPanel } from "@/lib/product-panel-context"
 
 interface HorizontalBarChartProps {
   data: {
@@ -16,14 +17,41 @@ interface HorizontalBarChartProps {
 }
 
 export function HorizontalBarChart({ data, colors, valueLabel, metricType = "revenue" }: HorizontalBarChartProps) {
+  const { openPanel } = useProductPanel()
+  
+  const handleBarClick = (barData: any) => {
+    if (barData && barData.activePayload) {
+      const clickedData = barData.activePayload[0].payload
+      
+      // If there's a URL, open it in a new tab
+      if (clickedData.url) {
+        window.open(clickedData.url, '_blank', 'noopener,noreferrer')
+      } else {
+        // Otherwise, open the product panel
+        const product = {
+          id: clickedData.name,
+          name: clickedData.name,
+          brand: clickedData.brand,
+          price: clickedData.price || 0,
+          unitPrice: clickedData.price || 0,
+          revenue: metricType === "revenue" ? clickedData.value : 0,
+          volume: metricType === "volume" ? clickedData.value : 0,
+          url: clickedData.url || '',
+          category: "Product"
+        }
+        
+        openPanel(
+          [product],
+          `Product Details`,
+          `${clickedData.name}`,
+          { brand: false, category: false, priceRange: false, packSize: false }
+        )
+      }
+    }
+  }
+  
   const formatValue = (value: number) => {
     return metricType === "revenue" ? `$${value.toLocaleString()}` : value.toLocaleString()
-  }
-
-  const handleBarClick = (data: any) => {
-    if (data && data.activePayload && data.activePayload[0] && data.activePayload[0].payload.url) {
-      window.open(data.activePayload[0].payload.url, '_blank', 'noopener,noreferrer')
-    }
   }
 
   // Function to lighten a color
@@ -69,6 +97,7 @@ export function HorizontalBarChart({ data, colors, valueLabel, metricType = "rev
           bottom: 5,
         }}
         onClick={handleBarClick}
+        style={{ cursor: 'pointer' }}
       >
         <CartesianGrid strokeDasharray="3 3" horizontal={false} />
         <XAxis

@@ -13,6 +13,7 @@ import {
 } from "recharts"
 import type { PriceType } from "@/components/price-type-selector"
 import type { MetricType } from "@/components/metric-type-selector"
+import { useProductPanel } from "@/lib/product-panel-context"
 
 interface ScatterChartProps {
   dimmerData: {
@@ -94,9 +95,28 @@ export function ScatterChart({
     "TP-Link": "#4ECDC4",
   }
 
+  const { openPanel } = useProductPanel()
+  
   const handleDotClick = (data: any) => {
-    if (data && data.url) {
-      window.open(data.url, '_blank', 'noopener,noreferrer')
+    if (data) {
+      const product = {
+        id: data.name,
+        name: data.name,
+        brand: data.brand,
+        price: data.x,
+        unitPrice: data.x,
+        revenue: data.revenue,
+        volume: data.volume,
+        url: data.url || '',
+        category: data.category
+      }
+      
+      openPanel(
+        [product],
+        `Product Details`,
+        `${data.name} • ${data.brand}`,
+        { brand: false, category: false, priceRange: false, packSize: false }
+      )
     }
   }
 

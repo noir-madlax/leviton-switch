@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
+import { ExternalLink } from "lucide-react"
 import { CompetitorMatrix } from "@/components/charts/competitor-matrix"
 import { MissedOpportunitiesMatrix } from "@/components/charts/missed-opportunities-matrix"
 import { CustomerSentimentBar } from "@/components/charts/customer-sentiment-bar"
@@ -10,6 +11,23 @@ import { getCompetitorAnalysisData, getUseCaseAnalysisData } from "@/lib/competi
 export function CompetitorAnalysis() {
   const competitorData = getCompetitorAnalysisData()
   const useCaseData = getUseCaseAnalysisData()
+
+  // Amazon product URLs for focal products
+  const productUrls: Record<string, string> = {
+    "Leviton D26HD": "https://www.amazon.com/dp/B0BVKYKKRK", // Leviton D26HD-1BZ Universal Dimmer
+    "Leviton D215S": "https://www.amazon.com/dp/B0BVKZLT3B", // Leviton D215S-1BW 15A Decora Switch
+    "Leviton DSL06": "https://www.amazon.com/dp/B00NG0ELL0", // Leviton DSL06-1LZ Slide Dimmer
+    "Lutron Caseta Diva": "https://www.amazon.com/dp/B01M3XJUAD", // Lutron Caseta Smart Dimmer Kit
+    "TP Link Switch": "https://www.amazon.com/dp/B01EZV35QU", // TP-Link Smart Wi-Fi Light Switch
+    "Lutron Diva": "https://www.amazon.com/dp/B085D8M2MR" // Lutron Diva C·L Dimmer
+  }
+
+  const handleProductClick = (productName: string) => {
+    const url = productUrls[productName]
+    if (url) {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
+  }
 
   // Calculate statistics for each product - including all 6 products
   const productStats = competitorData.targetProducts.map(product => {
@@ -40,8 +58,25 @@ export function CompetitorAnalysis() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {productStats.map((stat) => (
-            <Card key={stat.name} className="p-4">
-              <h4 className="font-medium text-gray-900 mb-3 text-sm">{stat.name}</h4>
+            <Card 
+              key={stat.name} 
+              className="interactive-card p-4"
+              onClick={() => handleProductClick(stat.name)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  handleProductClick(stat.name)
+                }
+              }}
+              tabIndex={0}
+              role="button"
+              aria-label={`View ${stat.name} on Amazon`}
+              title={`Click to view ${stat.name} on Amazon`}
+            >
+              <h4 className="font-medium text-gray-900 mb-3 text-sm flex items-center justify-between">
+                {stat.name}
+                <ExternalLink className="w-3 h-3 text-blue-500" />
+              </h4>
               <div className="text-xs text-gray-600 space-y-2">
                 <div className="flex justify-between">
                   <span>📝 Reviews:</span>
@@ -52,6 +87,9 @@ export function CompetitorAnalysis() {
                   <span className={`font-medium ${stat.avgSatisfaction >= 60 ? 'text-green-600' : stat.avgSatisfaction >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
                     {stat.avgSatisfaction}%
                   </span>
+                </div>
+                <div className="text-xs text-blue-500 mt-2 text-center">
+                  Click to view on Amazon
                 </div>
               </div>
             </Card>

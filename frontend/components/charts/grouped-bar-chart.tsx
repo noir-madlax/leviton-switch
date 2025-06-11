@@ -193,7 +193,11 @@ export function GroupedBarChart({
             id: item.name
           }))}
         />
-                 <Bar dataKey="value" maxBarSize={80}>
+                 <Bar 
+           dataKey="value" 
+           maxBarSize={80}
+           style={{ cursor: 'pointer' }}
+         >
            {data.map((entry, entryIndex) => (
              <Cell key={`cell-${entryIndex}`} fill={colors[entryIndex % colors.length]} />
            ))}

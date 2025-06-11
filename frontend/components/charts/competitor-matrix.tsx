@@ -1,6 +1,8 @@
 "use client"
 
 import { useMemo } from "react"
+import { useReviewPanel } from "@/lib/review-panel-context"
+import { allReviewData } from "@/lib/reviewData"
 
 interface MatrixData {
   product: string;
@@ -19,6 +21,30 @@ interface CompetitorMatrixProps {
 }
 
 export function CompetitorMatrix({ data, targetProducts }: CompetitorMatrixProps) {
+  const { openPanel } = useReviewPanel()
+  
+  const handleCellClick = (category: string, product: string, cellData: MatrixData | null) => {
+    if (!cellData || cellData.mentions === 0) return
+    
+    const categoryReviews = allReviewData[category] || []
+    if (categoryReviews.length === 0) return
+    
+    // Filter reviews by product if we have product information
+    const productReviews = categoryReviews.filter(review => 
+      review.brand === product.split(' ')[0] || // Try to match brand
+      review.text.toLowerCase().includes(product.toLowerCase()) // Or text contains product name
+    )
+    
+    const reviewsToShow = productReviews.length > 0 ? productReviews : categoryReviews
+    
+    openPanel(
+      reviewsToShow, 
+      `${category} Reviews`, 
+      `${product} • ${cellData.mentions} mentions • ${cellData.satisfactionRate}% satisfaction`,
+      { sentiment: true, brand: true, rating: true, verified: true }
+    )
+  }
+  
   const orderedProducts = useMemo(() => {
     // Group Leviton products first, then others
     const levitonProducts = targetProducts.filter(product => product.startsWith('Leviton'))
@@ -133,7 +159,20 @@ export function CompetitorMatrix({ data, targetProducts }: CompetitorMatrixProps
                   
                   return (
                     <td key={product} className="border border-gray-300 p-3 text-center">
-                      <div className={`py-2 px-3 rounded text-sm font-semibold ${getSatisfactionColor(cellData.satisfactionRate, cellData.totalReviews, cellData.mentions)}`}>
+                      <div 
+                        className={`matrix-cell py-2 px-3 rounded text-sm font-semibold ${getSatisfactionColor(cellData.satisfactionRate, cellData.totalReviews, cellData.mentions)}`}
+                        onClick={() => handleCellClick(row.category, product, cellData)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            handleCellClick(row.category, product, cellData)
+                          }
+                        }}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`View reviews for ${row.category} - ${product}: ${cellData.mentions} mentions, ${cellData.satisfactionRate}% satisfaction`}
+                        title={`Click to view reviews for ${row.category} - ${product}`}
+                      >
                         <div className="text-lg font-bold">
                           {cellData.mentions}
                         </div>

@@ -87,7 +87,13 @@ export function BarChart({
           {yAxisLabel}
         </text>
         {categories.map((category, index) => (
-          <Bar key={category} dataKey={category} fill={colors[index % colors.length]} name={category} />
+          <Bar 
+            key={category} 
+            dataKey={category} 
+            fill={colors[index % colors.length]} 
+            name={category}
+            style={{ cursor: 'pointer' }}
+          />
         ))}
       </ReChartsBar>
     </ResponsiveContainer>

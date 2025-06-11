@@ -2,6 +2,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { CustomerLike } from '@/lib/reviewInsights'
+import { useReviewPanel } from '@/lib/review-panel-context'
 
 interface CustomerLikesBarProps {
   data: CustomerLike[]
@@ -23,6 +24,15 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 }
 
 export function CustomerLikesBar({ data }: CustomerLikesBarProps) {
+  const { openPanel } = useReviewPanel()
+  
+  const handleBarClick = (data: any, index: number) => {
+    if (data && data.feature) {
+      // For now, just log the click - this could be enhanced to show specific reviews
+      console.log('Customer likes bar clicked:', data.feature)
+    }
+  }
+  
   // 根据满意度级别分配颜色
   const getBarColor = (satisfactionLevel: string) => {
     switch (satisfactionLevel) {
@@ -86,7 +96,12 @@ export function CustomerLikesBar({ data }: CustomerLikesBarProps) {
             }}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Bar dataKey="frequency" radius={[4, 4, 0, 0]}>
+          <Bar 
+            dataKey="frequency" 
+            radius={[4, 4, 0, 0]}
+            onClick={handleBarClick}
+            style={{ cursor: 'pointer' }}
+          >
             {sortedData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={getBarColor(entry.satisfactionLevel)} />
             ))}

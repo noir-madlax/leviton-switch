@@ -13,6 +13,7 @@ import {
   Cell
 } from "recharts"
 import { ProductPainPoint, getSatisfactionColor, getBubbleSize } from "@/lib/competitorAnalysis"
+import { useReviewPanel } from "@/lib/review-panel-context"
 
 interface CompetitorPainPointsMatrixProps {
   data: ProductPainPoint[]
@@ -33,6 +34,14 @@ interface ProcessedDataPoint {
 }
 
 export function CompetitorPainPointsMatrix({ data }: CompetitorPainPointsMatrixProps) {
+  const { openPanel } = useReviewPanel()
+  
+  const handleDotClick = (data: any) => {
+    if (data && data.payload) {
+      console.log('Competitor pain points matrix clicked:', data.payload)
+    }
+  }
+  
   // 处理数据，转换为矩阵格式
   const processedData = useMemo(() => {
     if (!data || data.length === 0) return { chartData: [], products: [], categories: [], maxMentions: 1 }
@@ -119,6 +128,7 @@ export function CompetitorPainPointsMatrix({ data }: CompetitorPainPointsMatrixP
         fillOpacity={0.7}
         stroke={color}
         strokeWidth={1}
+        style={{ cursor: 'pointer' }}
       />
     )
   }
@@ -236,6 +246,8 @@ export function CompetitorPainPointsMatrix({ data }: CompetitorPainPointsMatrixP
                   dataKey="z"
                   data={processedData.chartData}
                   shape={<CustomDot />}
+                  onClick={handleDotClick}
+                  style={{ cursor: 'pointer' }}
                 />
               </ScatterChart>
             </ResponsiveContainer>

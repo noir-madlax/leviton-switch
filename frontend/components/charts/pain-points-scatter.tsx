@@ -2,6 +2,7 @@
 
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { PainPoint } from '@/lib/reviewInsights'
+import { useReviewPanel } from '@/lib/review-panel-context'
 
 interface PainPointsScatterProps {
   data: PainPoint[]
@@ -24,6 +25,14 @@ const CustomTooltip = ({ active, payload }: any) => {
 }
 
 export function PainPointsScatter({ data }: PainPointsScatterProps) {
+  const { openPanel } = useReviewPanel()
+  
+  const handleDotClick = (data: any) => {
+    if (data && data.payload) {
+      console.log('Pain point scatter clicked:', data.payload)
+    }
+  }
+  
   // 根据类型分组数据，并添加颜色
   const processedData = data.map(item => ({
     ...item,
@@ -92,16 +101,22 @@ export function PainPointsScatter({ data }: PainPointsScatterProps) {
             name="Physical Issues" 
             data={physicalData} 
             fill="#ef4444"
+            onClick={handleDotClick}
+            style={{ cursor: 'pointer' }}
           />
           <Scatter 
             name="Performance Issues" 
             data={performanceData} 
             fill="#f97316"
+            onClick={handleDotClick}
+            style={{ cursor: 'pointer' }}
           />
           <Scatter 
             name="Usability Issues" 
             data={usabilityData} 
             fill="#dc2626"
+            onClick={handleDotClick}
+            style={{ cursor: 'pointer' }}
           />
         </ScatterChart>
       </ResponsiveContainer>
