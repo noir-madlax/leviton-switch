@@ -23,24 +23,40 @@ interface CompetitorMatrixProps {
 export function CompetitorMatrix({ data, targetProducts }: CompetitorMatrixProps) {
   const { openPanel } = useReviewPanel()
   
+  // Map product names to their ASINs for precise filtering
+  const productToAsin: Record<string, string> = {
+    'Leviton D26HD': 'B0BVKYKKRK',
+    'Leviton D215S': 'B0BVKZLT3B', 
+    'Lutron Caseta Diva': 'B0BSHKS26L',
+    'TP Link Switch': 'B01EZV35QU',
+    'Leviton DSL06': 'B00NG0ELL0',
+    'Lutron Diva': 'B085D8M2MR'
+  }
+  
   const handleCellClick = (category: string, product: string, cellData: MatrixData | null) => {
     if (!cellData || cellData.mentions === 0) return
+    
+    // Add null check for allReviewData and the specific category
+    if (!allReviewData || !allReviewData[category]) {
+      console.warn(`No review data found for category: ${category}`)
+      return
+    }
     
     const categoryReviews = allReviewData[category] || []
     if (categoryReviews.length === 0) return
     
-    // Filter reviews by product if we have product information
-    const productReviews = categoryReviews.filter(review => 
-      review.brand === product.split(' ')[0] || // Try to match brand
-      review.text.toLowerCase().includes(product.toLowerCase()) // Or text contains product name
-    )
+    // Filter reviews by specific product using ASIN
+    const productAsin = productToAsin[product]
+    const productReviews = productAsin 
+      ? categoryReviews.filter(review => review.productId === productAsin)
+      : []
     
     const reviewsToShow = productReviews.length > 0 ? productReviews : categoryReviews
     
     openPanel(
       reviewsToShow, 
       `${category} Reviews`, 
-      `${product} • ${cellData.mentions} mentions • ${cellData.satisfactionRate}% satisfaction`,
+      `${product} • ${cellData.mentions} mentions • ${cellData.satisfactionRate}% satisfaction • ${productReviews.length} product-specific reviews`,
       { sentiment: true, brand: true, rating: true, verified: true }
     )
   }

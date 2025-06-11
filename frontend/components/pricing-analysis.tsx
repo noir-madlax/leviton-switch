@@ -178,7 +178,7 @@ export function PricingAnalysis({ data, productLists, productAnalysis }: Pricing
       <h3 className="text-xl font-semibold mb-4">Price Distribution: Dimmers vs Switches</h3>
       <Card className="p-6 bg-gray-50 mb-8">
         <PriceTypeSelector onChange={setPriceType} />
-        <div className="h-[500px]">
+        <div className="h-[400px]">
           <ViolinChart
             dimmerPrices={dimmerPrices}
             switchPrices={switchPrices}
@@ -199,13 +199,13 @@ export function PricingAnalysis({ data, productLists, productAnalysis }: Pricing
         <div className="space-y-8">
           <div className="w-full">
             <h4 className="text-lg font-medium mb-3 text-center">🔆 Dimmer Switches</h4>
-            <div className="h-[320px] w-full">
+            <div className="h-[420px] w-full">
               <BrandViolinChart brands={getBrands(0)} priceType={priceType} category="Dimmer Switches" onViolinClick={handleBrandViolinClick} />
             </div>
           </div>
           <div className="w-full">
             <h4 className="text-lg font-medium mb-3 text-center">💡 Light Switches</h4>
-            <div className="h-[320px] w-full">
+            <div className="h-[420px] w-full">
               <BrandViolinChart brands={getBrands(1)} priceType={priceType} category="Light Switches" onViolinClick={handleBrandViolinClick} />
             </div>
           </div>

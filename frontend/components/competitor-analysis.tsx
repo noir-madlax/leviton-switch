@@ -6,11 +6,14 @@ import { ExternalLink } from "lucide-react"
 import { CompetitorMatrix } from "@/components/charts/competitor-matrix"
 import { MissedOpportunitiesMatrix } from "@/components/charts/missed-opportunities-matrix"
 import { CustomerSentimentBar } from "@/components/charts/customer-sentiment-bar"
+import { ReviewPanel } from "@/components/ui/review-panel"
+import { useReviewPanel } from "@/lib/review-panel-context"
 import { getCompetitorAnalysisData, getUseCaseAnalysisData } from "@/lib/competitorAnalysis"
 
 export function CompetitorAnalysis() {
   const competitorData = getCompetitorAnalysisData()
   const useCaseData = getUseCaseAnalysisData()
+  const reviewPanel = useReviewPanel()
 
   // Amazon product URLs for focal products
   const productUrls: Record<string, string> = {
@@ -154,6 +157,16 @@ export function CompetitorAnalysis() {
           productTotalReviews={competitorData.productTotalReviews}
         />
       </section>
+
+      {/* Add ReviewPanel */}
+      <ReviewPanel
+        isOpen={reviewPanel.isOpen}
+        onClose={reviewPanel.closePanel}
+        reviews={reviewPanel.reviews}
+        title={reviewPanel.title}
+        subtitle={reviewPanel.subtitle}
+        showFilters={reviewPanel.showFilters}
+      />
     </div>
   )
 } 

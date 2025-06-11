@@ -1,6 +1,6 @@
 // Competitor Analysis Data - 6 product competitive pain point analysis (including all products)
 // Data source: consolidated_aspect_categorization.json, expanded_review_results.json
-// Generated: 2025-06-10 19:25:19
+// Generated: 2025-06-11 02:05:04
 // Products analyzed: Leviton D26HD, D215S, Lutron Caseta Diva, TP Link Switch, Leviton DSL06, Lutron Diva (including all products)
 
 export interface ProductPainPoint {
@@ -66,7 +66,7 @@ export const competitorSummary = {
   "totalDataPoints": 92,
   "totalMentions": 63,
   "avgSatisfactionRate": 56.1,
-  "processingDate": "2025-06-10T19:25:19.663418",
+  "processingDate": "2025-06-11T02:05:04.657643",
   "description": "6 product competitive pain points analysis including all target products"
 };
 
@@ -1345,6 +1345,16 @@ export const useCaseMatrixData: ProductUseCaseData[] = [
   },
   {
     "product": "Leviton D26HD",
+    "useCase": "Complex Wiring Configurations",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton D26HD",
     "useCase": "Recessed and Can Lighting",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -1356,16 +1366,6 @@ export const useCaseMatrixData: ProductUseCaseData[] = [
   {
     "product": "Leviton D26HD",
     "useCase": "LED Lighting Integration",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0,
-    "gapLevel": 100.0
-  },
-  {
-    "product": "Leviton D26HD",
-    "useCase": "Complex Wiring Configurations",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
@@ -1445,6 +1445,16 @@ export const useCaseMatrixData: ProductUseCaseData[] = [
   },
   {
     "product": "Leviton D215S",
+    "useCase": "Complex Wiring Configurations",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton D215S",
     "useCase": "Recessed and Can Lighting",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -1456,16 +1466,6 @@ export const useCaseMatrixData: ProductUseCaseData[] = [
   {
     "product": "Leviton D215S",
     "useCase": "LED Lighting Integration",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0,
-    "gapLevel": 100.0
-  },
-  {
-    "product": "Leviton D215S",
-    "useCase": "Complex Wiring Configurations",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
@@ -1545,6 +1545,16 @@ export const useCaseMatrixData: ProductUseCaseData[] = [
   },
   {
     "product": "Lutron Caseta Diva",
+    "useCase": "Complex Wiring Configurations",
+    "mentions": 1,
+    "satisfactionRate": 100.0,
+    "positiveCount": 2,
+    "negativeCount": 0,
+    "totalReviews": 2,
+    "gapLevel": 0.0
+  },
+  {
+    "product": "Lutron Caseta Diva",
     "useCase": "Recessed and Can Lighting",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -1562,16 +1572,6 @@ export const useCaseMatrixData: ProductUseCaseData[] = [
     "negativeCount": 0,
     "totalReviews": 0,
     "gapLevel": 100.0
-  },
-  {
-    "product": "Lutron Caseta Diva",
-    "useCase": "Complex Wiring Configurations",
-    "mentions": 1,
-    "satisfactionRate": 100.0,
-    "positiveCount": 2,
-    "negativeCount": 0,
-    "totalReviews": 2,
-    "gapLevel": 0.0
   },
   {
     "product": "Lutron Caseta Diva",
@@ -1645,6 +1645,16 @@ export const useCaseMatrixData: ProductUseCaseData[] = [
   },
   {
     "product": "TP Link Switch",
+    "useCase": "Complex Wiring Configurations",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "TP Link Switch",
     "useCase": "Recessed and Can Lighting",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -1656,16 +1666,6 @@ export const useCaseMatrixData: ProductUseCaseData[] = [
   {
     "product": "TP Link Switch",
     "useCase": "LED Lighting Integration",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0,
-    "gapLevel": 100.0
-  },
-  {
-    "product": "TP Link Switch",
-    "useCase": "Complex Wiring Configurations",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
@@ -1745,6 +1745,16 @@ export const useCaseMatrixData: ProductUseCaseData[] = [
   },
   {
     "product": "Leviton DSL06",
+    "useCase": "Complex Wiring Configurations",
+    "mentions": 0,
+    "satisfactionRate": 0.0,
+    "positiveCount": 0,
+    "negativeCount": 0,
+    "totalReviews": 0,
+    "gapLevel": 100.0
+  },
+  {
+    "product": "Leviton DSL06",
     "useCase": "Recessed and Can Lighting",
     "mentions": 0,
     "satisfactionRate": 0.0,
@@ -1756,16 +1766,6 @@ export const useCaseMatrixData: ProductUseCaseData[] = [
   {
     "product": "Leviton DSL06",
     "useCase": "LED Lighting Integration",
-    "mentions": 0,
-    "satisfactionRate": 0.0,
-    "positiveCount": 0,
-    "negativeCount": 0,
-    "totalReviews": 0,
-    "gapLevel": 100.0
-  },
-  {
-    "product": "Leviton DSL06",
-    "useCase": "Complex Wiring Configurations",
     "mentions": 0,
     "satisfactionRate": 0.0,
     "positiveCount": 0,
@@ -1845,6 +1845,16 @@ export const useCaseMatrixData: ProductUseCaseData[] = [
   },
   {
     "product": "Lutron Diva",
+    "useCase": "Complex Wiring Configurations",
+    "mentions": 1,
+    "satisfactionRate": 50.0,
+    "positiveCount": 1,
+    "negativeCount": 1,
+    "totalReviews": 2,
+    "gapLevel": 50.0
+  },
+  {
+    "product": "Lutron Diva",
     "useCase": "Recessed and Can Lighting",
     "mentions": 2,
     "satisfactionRate": 100.0,
@@ -1857,16 +1867,6 @@ export const useCaseMatrixData: ProductUseCaseData[] = [
     "product": "Lutron Diva",
     "useCase": "LED Lighting Integration",
     "mentions": 2,
-    "satisfactionRate": 50.0,
-    "positiveCount": 1,
-    "negativeCount": 1,
-    "totalReviews": 2,
-    "gapLevel": 50.0
-  },
-  {
-    "product": "Lutron Diva",
-    "useCase": "Complex Wiring Configurations",
-    "mentions": 1,
     "satisfactionRate": 50.0,
     "positiveCount": 1,
     "negativeCount": 1,

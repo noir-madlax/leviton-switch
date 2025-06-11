@@ -32,26 +32,41 @@ interface SentimentData {
 export function CustomerSentimentBar({ data, productTotalReviews }: CustomerSentimentBarProps) {
   const { openPanel } = useReviewPanel()
   
+  // Map product names to their ASINs for precise filtering
+  const productToAsin: Record<string, string> = {
+    'Leviton D26HD': 'B0BVKYKKRK',
+    'Leviton D215S': 'B0BVKZLT3B', 
+    'Lutron Caseta Diva': 'B0BSHKS26L',
+    'TP Link Switch': 'B01EZV35QU',
+    'Leviton DSL06': 'B00NG0ELL0',
+    'Lutron Diva': 'B085D8M2MR'
+  }
+  
   const handleBarClick = (sentimentData: SentimentData) => {
-    // Get all reviews for this product across all categories
-    const productBrand = sentimentData.product.split(' ')[0]
+    // Add null check for allReviewData
+    if (!allReviewData) {
+      console.warn('No review data available')
+      return
+    }
     
-    // Collect all reviews for this product from all categories
+    // Get reviews for this specific product using ASIN
+    const productAsin = productToAsin[sentimentData.product]
     const allProductReviews: any[] = []
-    Object.entries(allReviewData).forEach(([category, reviews]) => {
-      const productReviews = reviews.filter(review => 
-        review.brand === productBrand || 
-        review.text.toLowerCase().includes(sentimentData.product.toLowerCase())
-      )
-      allProductReviews.push(...productReviews)
-    })
+    
+    if (productAsin) {
+      // Collect all reviews for this specific product from all categories
+      Object.entries(allReviewData).forEach(([category, reviews]) => {
+        const productReviews = reviews.filter(review => review.productId === productAsin)
+        allProductReviews.push(...productReviews)
+      })
+    }
     
     if (allProductReviews.length === 0) return
     
     openPanel(
       allProductReviews,
       `${sentimentData.product} Reviews`,
-      `All reviews • ${sentimentData.totalReviews} total • ${sentimentData.avgSatisfactionRate}% avg satisfaction`,
+      `All reviews • ${sentimentData.totalReviews} total reviews in dataset • ${allProductReviews.length} product-specific reviews found • ${sentimentData.avgSatisfactionRate}% avg satisfaction`,
       { sentiment: true, brand: true, rating: true, verified: true }
     )
   }
