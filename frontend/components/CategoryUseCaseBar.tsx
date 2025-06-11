@@ -100,6 +100,17 @@ export default function CategoryUseCaseBar({
 }: CategoryUseCaseBarProps) {
   const { openPanel } = useReviewPanel()
   
+  // 添加数据安全检查，防止预渲染时 data 为 undefined
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardContent className="p-8 text-center">
+          <p className="text-gray-500">No use case data available.</p>
+        </CardContent>
+      </Card>
+    )
+  }
+  
   const chartData = data.map(item => ({
     ...item,
     // 用于X轴显示的短名称
