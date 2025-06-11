@@ -1,12 +1,15 @@
 "use client"
 
-import { useMemo, useState, useRef } from "react"
+import { useMemo, useState, useRef, useLayoutEffect } from "react"
 import { ResponsiveContainer } from "recharts"
 import type { PriceType } from "@/components/price-type-selector"
+import type { Product } from "@/lib/types"
 
 interface ViolinChartProps {
   dimmerPrices: number[]
   switchPrices: number[]
+  dimmerProducts: Product[]
+  switchProducts: Product[]
   dimmerStats: {
     min: number
     q1: number
@@ -25,6 +28,11 @@ interface ViolinChartProps {
   }
   priceType?: PriceType
   onViolinClick?: (category: string, priceRange: { min: number; max: number }) => void
+  productLists?: {
+    byBrand: Record<string, Product[]>
+    bySegment: Record<string, Product[]>
+    byPackageSize: Record<string, Product[]>
+  }
 }
 
 interface HoverState {
@@ -61,20 +69,32 @@ function kde(data: number[], bandwidth: number, min: number, max: number, steps:
 }
 
 // Function to normalize density values to a specific range
-function normalizeDensity(densityData: [number, number][], maxHeight: number): [number, number][] {
+function normalizeDensity(densityData: [number, number][], maxHalfWidth: number): [number, number][] {
   const maxDensity = Math.max(...densityData.map((d) => d[1]))
-  return densityData.map(([x, y]) => [x, (y / maxDensity) * maxHeight])
+  const minWidth = 0.5 // Small constant minimal width in pixels
+  if (maxDensity === 0) return densityData.map(([x]) => [x, minWidth])
+  return densityData.map(([x, y]) => [x, Math.max(minWidth, (y / maxDensity) * maxHalfWidth)])
 }
 
-// Function to count products within a price range
-function countProductsInRange(prices: number[], targetPrice: number, tolerancePercent: number = 0.05): number {
-  const tolerance = targetPrice * tolerancePercent
-  return prices.filter(price => Math.abs(price - targetPrice) <= tolerance).length
+// Simplified function to count products within a price range
+function countProductsInRange(
+  products: Product[],
+  targetPrice: number,
+  priceType: PriceType,
+  tolerance: number
+): number {
+  if (!products) return 0
+  return products.filter(product => {
+    const price = priceType === 'unit' ? product.unitPrice : product.price
+    if (price === null || price === undefined) return false
+    return Math.abs(price - targetPrice) <= tolerance
+  }).length
 }
 
 // Function to get density width at a specific price
 function getDensityWidth(densityData: [number, number][], price: number): number {
   // Find the closest density point
+  if (densityData.length === 0) return 0
   let closestPoint = densityData[0]
   let minDistance = Math.abs(densityData[0][0] - price)
   
@@ -92,10 +112,13 @@ function getDensityWidth(densityData: [number, number][], price: number): number
 export function ViolinChart({
   dimmerPrices,
   switchPrices,
+  dimmerProducts,
+  switchProducts,
   dimmerStats,
   switchStats,
   priceType = "sku",
   onViolinClick,
+  productLists,
 }: ViolinChartProps) {
   const [hoverState, setHoverState] = useState<HoverState>({
     x: 0,
@@ -108,55 +131,80 @@ export function ViolinChart({
     isSwitchHover: false,
   })
   
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  useLayoutEffect(() => {
+    if (containerRef.current) {
+      const { width, height } = containerRef.current.getBoundingClientRect();
+      setDimensions({ width, height });
+
+      const resizeObserver = new ResizeObserver(entries => {
+        if (!Array.isArray(entries) || !entries.length) {
+          return;
+        }
+        const entry = entries[0];
+        setDimensions({ width: entry.contentRect.width, height: entry.contentRect.height });
+      });
+
+      resizeObserver.observe(containerRef.current);
+      return () => resizeObserver.disconnect();
+    }
+  }, []);
+
   const svgRef = useRef<SVGSVGElement>(null)
 
-  // Calculate KDE for both categories
-  const dimmerDensity = useMemo(() => {
-    if (dimmerPrices.length === 0) return []
-    const bandwidth = 5 // Adjust for smoothness
-    const min = Math.max(0, dimmerStats.min - 10)
-    const max = dimmerStats.max + 10 // Use actual max for better accuracy
-    return normalizeDensity(kde(dimmerPrices, bandwidth, min, max, 50), 40)
-  }, [dimmerPrices, dimmerStats.min, dimmerStats.max])
-
-  const switchDensity = useMemo(() => {
-    if (switchPrices.length === 0) return []
-    const bandwidth = 5 // Adjust for smoothness
-    const min = Math.max(0, switchStats.min - 10)
-    const max = switchStats.max + 10 // Use actual max for better accuracy
-    return normalizeDensity(kde(switchPrices, bandwidth, min, max, 50), 40)
-  }, [switchPrices, switchStats.min, switchStats.max])
-
-  // Calculate max price for y-axis
-  const maxPrice = Math.max(dimmerStats.max || 0, switchStats.max || 0)
+  const maxPrice = useMemo(() => Math.max(dimmerStats.max || 0, switchStats.max || 0), [dimmerStats.max, switchStats.max])
   
-  // Generate dynamic Y-axis labels based on actual max price
-  const yAxisLabels = useMemo(() => {
-    const steps = 5
-    const stepSize = Math.ceil(maxPrice / steps / 10) * 10 // Round to nearest 10
-    return Array.from({ length: steps + 1 }, (_, i) => i * stepSize)
-  }, [maxPrice])
+  const { margin, chartWidth, chartHeight, maxViolinHalfWidth, dimmerX, switchX } = useMemo(() => {
+    const margin = { top: 50, right: 20, bottom: 50, left: 80 };
+    const chartWidth = dimensions.width > 0 ? dimensions.width - margin.left - margin.right : 0;
+    const chartHeight = dimensions.height > 0 ? dimensions.height - margin.top - margin.bottom : 0;
+    const maxViolinHalfWidth = chartWidth / 12;
+    const dimmerX = margin.left + chartWidth / 3;
+    const switchX = margin.left + (chartWidth * 2) / 3;
+    return { margin, chartWidth, chartHeight, maxViolinHalfWidth, dimmerX, switchX };
+  }, [dimensions.width, dimensions.height]);
 
-  // Handle mouse movement
+  const dimmerDensity = useMemo(() => {
+    if (dimmerPrices.length < 2) return [];
+    const density = normalizeDensity(kde(dimmerPrices, 1.5, dimmerStats.min, dimmerStats.max, 50), maxViolinHalfWidth);
+    density.sort((a, b) => a[0] - b[0]);
+    return [[dimmerStats.min, 0], ...density.filter(([p]) => p > dimmerStats.min && p < dimmerStats.max), [dimmerStats.max, 0]] as [number, number][];
+  }, [dimmerPrices, dimmerStats, maxViolinHalfWidth]);
+  
+  const switchDensity = useMemo(() => {
+    if (switchPrices.length < 2) return [];
+    const density = normalizeDensity(kde(switchPrices, 1.5, switchStats.min, switchStats.max, 50), maxViolinHalfWidth);
+    density.sort((a, b) => a[0] - b[0]);
+    return [[switchStats.min, 0], ...density.filter(([p]) => p > switchStats.min && p < switchStats.max), [switchStats.max, 0]] as [number, number][];
+  }, [switchPrices, switchStats, maxViolinHalfWidth]);
+
+  const yAxisLabels = useMemo(() => {
+    if (maxPrice === 0) return [];
+    return Array.from({ length: 6 }, (_, i) => i * Math.ceil(maxPrice / 5 / 10) * 10);
+  }, [maxPrice]);
+
+  const fixedTolerance = maxPrice * 0.05
+
+  const getDimmerWidth = (price: number) => getDensityWidth(dimmerDensity, price)
+  const getSwitchWidth = (price: number) => getDensityWidth(switchDensity, price)
+
   const handleMouseMove = (event: React.MouseEvent<SVGSVGElement>) => {
     if (!svgRef.current) return
     
     const rect = svgRef.current.getBoundingClientRect()
-    const svgX = ((event.clientX - rect.left) / rect.width) * 600
-    const svgY = ((event.clientY - rect.top) / rect.height) * 400
+    const svgX = event.clientX - rect.left
+    const svgY = event.clientY - rect.top
     
-    // Check if we're within the chart area
-    if (svgX >= 80 && svgX <= 520 && svgY >= 50 && svgY <= 350) {
-      // Convert SVG coordinates to price
-      const price = ((350 - svgY) / 300) * maxPrice
+    if (svgX >= margin.left && svgX <= margin.left + chartWidth && svgY >= margin.top && svgY <= margin.top + chartHeight) {
+      const price = priceFromY(svgY)
       
-      // Determine which violin we're over
-      const isDimmerHover = svgX >= 120 && svgX <= 280 // Dimmer violin area (200 ± 80)
-      const isSwitchHover = svgX >= 320 && svgX <= 480 // Switch violin area (400 ± 80)
+      const isDimmerHover = svgX >= dimmerX - maxViolinHalfWidth && svgX <= dimmerX + maxViolinHalfWidth
+      const isSwitchHover = svgX >= switchX - maxViolinHalfWidth && svgX <= switchX + maxViolinHalfWidth
       
-      // Count products at this price level
-      const dimmerCount = countProductsInRange(dimmerPrices, price)
-      const switchCount = countProductsInRange(switchPrices, price)
+      const dimmerCount = countProductsInRange(dimmerProducts, price, priceType, fixedTolerance)
+      const switchCount = countProductsInRange(switchProducts, price, priceType, fixedTolerance)
       
       setHoverState({
         x: svgX,
@@ -178,277 +226,167 @@ export function ViolinChart({
   }
 
   const handleClick = (event: React.MouseEvent<SVGSVGElement>) => {
-    console.log('Violin chart clicked!')
-    
-    if (!svgRef.current) {
-      console.log('No SVG ref')
-      return
-    }
-    
-    if (!onViolinClick) {
-      console.log('No onViolinClick handler provided')
-      return
-    }
+    if (!svgRef.current || !onViolinClick) return
     
     const rect = svgRef.current.getBoundingClientRect()
-    const svgX = ((event.clientX - rect.left) / rect.width) * 600
-    const svgY = ((event.clientY - rect.top) / rect.height) * 400
+    const svgX = event.clientX - rect.left
+    const svgY = event.clientY - rect.top
     
-    console.log(`Click position: svgX=${svgX}, svgY=${svgY}`)
-    
-    // Check if we're within the chart area
-    if (svgX >= 80 && svgX <= 520 && svgY >= 50 && svgY <= 350) {
-      console.log('Click is within chart area')
+    if (svgX >= margin.left && svgX <= margin.left + chartWidth && svgY >= margin.top && svgY <= margin.top + chartHeight) {
+      const price = priceFromY(svgY)
       
-      // Convert SVG coordinates to price
-      const price = ((350 - svgY) / 300) * maxPrice
-      console.log(`Calculated price: ${price.toFixed(2)}`)
-      
-      // Determine which violin we clicked
-      const isDimmerClick = svgX >= 120 && svgX <= 280 // Dimmer violin area
-      const isSwitchClick = svgX >= 320 && svgX <= 480 // Switch violin area
-      
-      console.log(`isDimmerClick: ${isDimmerClick}, isSwitchClick: ${isSwitchClick}`)
+      const isDimmerClick = svgX >= dimmerX - maxViolinHalfWidth && svgX <= dimmerX + maxViolinHalfWidth
+      const isSwitchClick = svgX >= switchX - maxViolinHalfWidth && svgX <= switchX + maxViolinHalfWidth
       
       if (isDimmerClick || isSwitchClick) {
-        // Create a very narrow price range around the clicked price (±$1 or ±3% whichever is smaller)
-        const tolerance = Math.min(price * 0.03, 1)
         const priceRange = {
-          min: Math.max(0, price - tolerance),
-          max: price + tolerance
+          min: price - fixedTolerance,
+          max: price + fixedTolerance
         }
-        
         const category = isDimmerClick ? "Dimmer Switches" : "Light Switches"
-        console.log(`Violin click - Category: ${category}, Price: ${price.toFixed(2)}, Range: ${priceRange.min.toFixed(2)} - ${priceRange.max.toFixed(2)}`)
         onViolinClick(category, priceRange)
-      } else {
-        console.log('Click not on any violin')
       }
-    } else {
-      console.log('Click outside chart area')
     }
   }
+  
+  const dimmerPath = (side: 'left' | 'right') => {
+    if (dimmerDensity.length === 0) return "";
+    const sign = side === 'left' ? -1 : 1;
+    const points = dimmerDensity.map(([price, density]) => `L ${sign * density},${yScale(price)}`).join(" ");
+    return `M 0,${yScale(dimmerStats.min)} ${points} Z`;
+  }
+  
+  const switchPath = (side: 'left' | 'right') => {
+    if (switchDensity.length === 0) return "";
+    const sign = side === 'left' ? -1 : 1;
+    const points = switchDensity.map(([price, density]) => `L ${sign * density},${yScale(price)}`).join(" ");
+    return `M 0,${yScale(switchStats.min)} ${points} Z`;
+  }
 
-  // Calculate crosshair width based on violin density
-  const getDimmerWidth = (price: number) => getDensityWidth(dimmerDensity, price)
-  const getSwitchWidth = (price: number) => getDensityWidth(switchDensity, price)
+  const yScale = (price: number) => margin.top + chartHeight - (price / maxPrice) * chartHeight
+  const priceFromY = (y: number) => ((margin.top + chartHeight - y) / chartHeight) * maxPrice
+
+  if (chartWidth === 0 || chartHeight === 0) {
+    return (
+      <div className="h-full flex">
+        <div className="flex-1 relative" ref={containerRef} />
+        <StatsBox dimmerStats={dimmerStats} switchStats={switchStats} priceType={priceType} />
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex">
-      {/* Main Violin Plot */}
-      <div className="flex-1 relative">
-        <ResponsiveContainer width="100%" height="100%">
-          <svg 
-            ref={svgRef}
-            viewBox="0 0 600 400" 
-            className="w-full h-full cursor-pointer"
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            onClick={(e) => {
-              console.log('Direct SVG click detected')
-              handleClick(e)
-            }}
-          >
-            {/* Background */}
-            <rect width="600" height="400" fill="#f8fafc" />
+      <div className="flex-1 relative" ref={containerRef}>
+        <svg 
+          ref={svgRef}
+          width={dimensions.width}
+          height={dimensions.height}
+          className="w-full h-full cursor-pointer"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          onClick={handleClick}
+        >
+          {/* Background */}
+          <rect x={margin.left} y={margin.top} width={chartWidth} height={chartHeight} fill="#f8fafc" />
 
-            {/* Grid lines */}
-            {yAxisLabels.map((y) => (
-              <line
-                key={y}
-                x1="80"
-                y1={400 - (y / maxPrice) * 300 - 50}
-                x2="520"
-                y2={400 - (y / maxPrice) * 300 - 50}
-                stroke="#e2e8f0"
-                strokeDasharray="2,2"
-              />
-            ))}
+          {/* Grid lines */}
+          {yAxisLabels.map((y) => (
+            <line
+              key={y}
+              x1={margin.left}
+              y1={yScale(y)}
+              x2={margin.left + chartWidth}
+              y2={yScale(y)}
+              stroke="#e2e8f0"
+              strokeDasharray="2,2"
+            />
+          ))}
 
-            {/* Y-axis */}
-            <line x1="80" y1="50" x2="80" y2="350" stroke="#64748b" strokeWidth="1" />
+          {/* Y-axis */}
+          <line x1={margin.left} y1={margin.top} x2={margin.left} y2={margin.top + chartHeight} stroke="#64748b" strokeWidth="1" />
 
-            {/* Y-axis labels */}
-            {yAxisLabels.map((y) => (
-              <text
-                key={y}
-                x="75"
-                y={400 - (y / maxPrice) * 300 - 50}
-                textAnchor="end"
-                fontSize="12"
-                fill="#64748b"
-                dominantBaseline="middle"
-              >
-                ${y}
-              </text>
-            ))}
-
-            {/* Y-axis title */}
-            <text x="30" y="200" textAnchor="middle" fontSize="14" fill="#64748b" transform="rotate(-90, 30, 200)">
-              Price (USD)
+          {/* Y-axis labels */}
+          {yAxisLabels.map((y) => (
+            <text
+              key={y}
+              x={margin.left - 5}
+              y={yScale(y)}
+              textAnchor="end"
+              fontSize="12"
+              fill="#64748b"
+              dominantBaseline="middle"
+            >
+              ${y}
             </text>
+          ))}
 
-            {/* X-axis */}
-            <line x1="80" y1="350" x2="520" y2="350" stroke="#64748b" strokeWidth="1" />
+          {/* Y-axis title */}
+          <text x={20} y={margin.top + chartHeight / 2} textAnchor="middle" fontSize="14" fill="#64748b" transform={`rotate(-90, 20, ${margin.top + chartHeight / 2})`}>
+            Price (USD)
+          </text>
 
-            {/* Dimmer Switches Violin */}
-            <g transform="translate(200, 0)">
-              {/* Left side of violin */}
-              <path
-                d={`M 0,${350} ${dimmerDensity.map(([x, y]) => `L ${-y},${350 - (x / maxPrice) * 300}`).join(" ")} L 0,50 Z`}
-                fill="#FF6B6B"
-                fillOpacity="0.7"
-                stroke="#FF6B6B"
-                strokeWidth="1"
-              />
+          {/* X-axis */}
+          <line x1={margin.left} y1={margin.top + chartHeight} x2={margin.left + chartWidth} y2={margin.top + chartHeight} stroke="#64748b" strokeWidth="1" />
 
-              {/* Right side of violin */}
-              <path
-                d={`M 0,${350} ${dimmerDensity.map(([x, y]) => `L ${y},${350 - (x / maxPrice) * 300}`).join(" ")} L 0,50 Z`}
-                fill="#FF6B6B"
-                fillOpacity="0.7"
-                stroke="#FF6B6B"
-                strokeWidth="1"
-              />
+          {/* Dimmer Switches Violin */}
+          <g transform={`translate(${dimmerX}, 0)`}>
+            <path d={dimmerPath('left')} fill="#FF6B6B" fillOpacity="0.7" stroke="#FF6B6B" strokeWidth="1" />
+            <path d={dimmerPath('right')} fill="#FF6B6B" fillOpacity="0.7" stroke="#FF6B6B" strokeWidth="1" />
+            <line x1={-getDimmerWidth(dimmerStats.median)} y1={yScale(dimmerStats.median)} x2={getDimmerWidth(dimmerStats.median)} y2={yScale(dimmerStats.median)} stroke="#7c3aed" strokeWidth="3" strokeDasharray="8,4" />
+            <line x1={-getDimmerWidth(dimmerStats.mean)} y1={yScale(dimmerStats.mean)} x2={getDimmerWidth(dimmerStats.mean)} y2={yScale(dimmerStats.mean)} stroke="#059669" strokeWidth="2" strokeDasharray="4,4" />
+          </g>
 
-              {/* Median line - match violin width exactly */}
-              <line
-                x1={-getDensityWidth(dimmerDensity, dimmerStats.median)}
-                y1={350 - (dimmerStats.median / maxPrice) * 300}
-                x2={getDensityWidth(dimmerDensity, dimmerStats.median)}
-                y2={350 - (dimmerStats.median / maxPrice) * 300}
-                stroke="#7c3aed"
-                strokeWidth="3"
-                strokeDasharray="8,4"
-              />
+          {/* Light Switches Violin */}
+          <g transform={`translate(${switchX}, 0)`}>
+            <path d={switchPath('left')} fill="#4ECDC4" fillOpacity="0.7" stroke="#4ECDC4" strokeWidth="1" />
+            <path d={switchPath('right')} fill="#4ECDC4" fillOpacity="0.7" stroke="#4ECDC4" strokeWidth="1" />
+            <line x1={-getSwitchWidth(switchStats.median)} y1={yScale(switchStats.median)} x2={getSwitchWidth(switchStats.median)} y2={yScale(switchStats.median)} stroke="#7c3aed" strokeWidth="3" strokeDasharray="8,4" />
+            <line x1={-getSwitchWidth(switchStats.mean)} y1={yScale(switchStats.mean)} x2={getSwitchWidth(switchStats.mean)} y2={yScale(switchStats.mean)} stroke="#059669" strokeWidth="2" strokeDasharray="4,4" />
+          </g>
 
-              {/* Mean line - match violin width exactly */}
-              <line
-                x1={-getDensityWidth(dimmerDensity, dimmerStats.mean)}
-                y1={350 - (dimmerStats.mean / maxPrice) * 300}
-                x2={getDensityWidth(dimmerDensity, dimmerStats.mean)}
-                y2={350 - (dimmerStats.mean / maxPrice) * 300}
-                stroke="#059669"
-                strokeWidth="2"
-                strokeDasharray="4,4"
-              />
+          {/* Crosshair */}
+          {hoverState.visible && (
+            <g>
+              {hoverState.isDimmerHover && (
+                <line x1={dimmerX - getDimmerWidth(hoverState.price)} y1={hoverState.y} x2={dimmerX + getDimmerWidth(hoverState.price)} y2={hoverState.y} stroke="#dc2626" strokeWidth="2" opacity="0.9" />
+              )}
+              {hoverState.isSwitchHover && (
+                <line x1={switchX - getSwitchWidth(hoverState.price)} y1={hoverState.y} x2={switchX + getSwitchWidth(hoverState.price)} y2={hoverState.y} stroke="#0891b2" strokeWidth="2" opacity="0.9" />
+              )}
             </g>
+          )}
 
-            {/* Light Switches Violin */}
-            <g transform="translate(400, 0)">
-              {/* Left side of violin */}
-              <path
-                d={`M 0,${350} ${switchDensity.map(([x, y]) => `L ${-y},${350 - (x / maxPrice) * 300}`).join(" ")} L 0,50 Z`}
-                fill="#4ECDC4"
-                fillOpacity="0.7"
-                stroke="#4ECDC4"
-                strokeWidth="1"
-              />
+          {/* X-axis labels */}
+          <text x={dimmerX} y={margin.top + chartHeight + 30} textAnchor="middle" fontSize="14" fill="#64748b">Dimmer Switches</text>
+          <text x={switchX} y={margin.top + chartHeight + 30} textAnchor="middle" fontSize="14" fill="#64748b">Light Switches</text>
 
-              {/* Right side of violin */}
-              <path
-                d={`M 0,${350} ${switchDensity.map(([x, y]) => `L ${y},${350 - (x / maxPrice) * 300}`).join(" ")} L 0,50 Z`}
-                fill="#4ECDC4"
-                fillOpacity="0.7"
-                stroke="#4ECDC4"
-                strokeWidth="1"
-              />
-
-              {/* Median line - match violin width exactly */}
-              <line
-                x1={-getDensityWidth(switchDensity, switchStats.median)}
-                y1={350 - (switchStats.median / maxPrice) * 300}
-                x2={getDensityWidth(switchDensity, switchStats.median)}
-                y2={350 - (switchStats.median / maxPrice) * 300}
-                stroke="#7c3aed"
-                strokeWidth="3"
-                strokeDasharray="8,4"
-              />
-
-              {/* Mean line - match violin width exactly */}
-              <line
-                x1={-getDensityWidth(switchDensity, switchStats.mean)}
-                y1={350 - (switchStats.mean / maxPrice) * 300}
-                x2={getDensityWidth(switchDensity, switchStats.mean)}
-                y2={350 - (switchStats.mean / maxPrice) * 300}
-                stroke="#059669"
-                strokeWidth="2"
-                strokeDasharray="4,4"
-              />
-            </g>
-
-            {/* Crosshair - only show for the violin being hovered */}
-            {hoverState.visible && (
-              <g>
-                {/* Dimmer violin crosshair - only show when hovering over dimmer */}
-                {hoverState.isDimmerHover && (
-                  <line
-                    x1={200 - getDimmerWidth(hoverState.price)}
-                    y1={hoverState.y}
-                    x2={200 + getDimmerWidth(hoverState.price)}
-                    y2={hoverState.y}
-                    stroke="#dc2626"
-                    strokeWidth="2"
-                    opacity="0.9"
-                  />
-                )}
-                
-                {/* Switch violin crosshair - only show when hovering over switch */}
-                {hoverState.isSwitchHover && (
-                  <line
-                    x1={400 - getSwitchWidth(hoverState.price)}
-                    y1={hoverState.y}
-                    x2={400 + getSwitchWidth(hoverState.price)}
-                    y2={hoverState.y}
-                    stroke="#0891b2"
-                    strokeWidth="2"
-                    opacity="0.9"
-                  />
-                )}
-              </g>
-            )}
-
-            {/* X-axis labels */}
-            <text x="200" y="380" textAnchor="middle" fontSize="14" fill="#64748b">
-              Dimmer Switches
-            </text>
-            <text x="400" y="380" textAnchor="middle" fontSize="14" fill="#64748b">
-              Light Switches
-            </text>
-
-            {/* Legend - moved and made more visible */}
-            <g transform="translate(20, 60)">
-              <rect x="0" y="0" width="160" height="85" fill="white" fillOpacity="0.9" stroke="#e5e7eb" strokeWidth="1" rx="4"/>
-              
-              <rect x="10" y="10" width="15" height="15" fill="#FF6B6B" fillOpacity="0.7" />
-              <text x="30" y="22" fontSize="11" fill="#374151">Dimmer Switches</text>
-
-              <rect x="10" y="30" width="15" height="15" fill="#4ECDC4" fillOpacity="0.7" />
-              <text x="30" y="42" fontSize="11" fill="#374151">Light Switches</text>
-
-              <line x1="10" y1="55" x2="25" y2="55" stroke="#7c3aed" strokeWidth="3" strokeDasharray="8,4" />
-              <text x="30" y="58" fontSize="11" fill="#374151">Median</text>
-
-              <line x1="10" y1="70" x2="25" y2="70" stroke="#059669" strokeWidth="2" strokeDasharray="4,4" />
-              <text x="30" y="73" fontSize="11" fill="#374151">Mean</text>
-            </g>
-          </svg>
-        </ResponsiveContainer>
+          {/* Legend */}
+          <g transform={`translate(${margin.left + 20}, ${margin.top})`}>
+            <rect x="0" y="0" width="160" height="85" fill="white" fillOpacity="0.9" stroke="#e5e7eb" strokeWidth="1" rx="4"/>
+            <rect x="10" y="10" width="15" height="15" fill="#FF6B6B" fillOpacity="0.7" />
+            <text x="30" y="22" fontSize="11" fill="#374151">Dimmer Switches</text>
+            <rect x="10" y="30" width="15" height="15" fill="#4ECDC4" fillOpacity="0.7" />
+            <text x="30" y="42" fontSize="11" fill="#374151">Light Switches</text>
+            <line x1="10" y1="55" x2="25" y2="55" stroke="#7c3aed" strokeWidth="3" strokeDasharray="8,4" />
+            <text x="30" y="58" fontSize="11" fill="#374151">Median</text>
+            <line x1="10" y1="70" x2="25" y2="70" stroke="#059669" strokeWidth="2" strokeDasharray="4,4" />
+            <text x="30" y="73" fontSize="11" fill="#374151">Mean</text>
+          </g>
+        </svg>
         
         {/* Hover tooltip */}
         {hoverState.visible && (
           <div
             className="absolute bg-white border border-gray-300 rounded-md shadow-lg p-3 pointer-events-none z-10"
             style={{
-              left: `${(hoverState.x / 600) * 100}%`,
-              top: `${(hoverState.y / 400) * 100}%`,
+              left: `${hoverState.x}px`,
+              top: `${hoverState.y}px`,
               transform: 'translate(-50%, -100%)',
               marginTop: '-10px'
             }}
           >
-            <div className="text-sm font-medium text-gray-800">
-              Price: ${hoverState.price.toFixed(2)}
-            </div>
+            <div className="text-sm font-medium text-gray-800">Price: ${hoverState.price.toFixed(2)}</div>
             <div className="text-xs text-gray-600 mt-1">
               {hoverState.isDimmerHover && (
                 <div className="flex items-center gap-2">
@@ -466,36 +404,39 @@ export function ViolinChart({
           </div>
         )}
       </div>
-
-      {/* Statistics Box */}
-      <div className="w-80 ml-4 bg-white border border-gray-200 rounded-md p-4">
-        <div className="mb-4">
-          <h4 className="font-medium text-sm mb-2">
-            Dimmer Switches ({priceType === "sku" ? "Total Price (for a full pack)" : "Price per unit"}):
-          </h4>
-          <div className="text-xs space-y-1">
-            <div>Min: ${dimmerStats.min.toFixed(2)}</div>
-            <div>Q1: ${dimmerStats.q1.toFixed(2)}</div>
-            <div>Median: ${dimmerStats.median.toFixed(2)}</div>
-            <div>Mean: ${dimmerStats.mean.toFixed(2)}</div>
-            <div>Q3: ${dimmerStats.q3.toFixed(2)}</div>
-            <div>Max: ${dimmerStats.max.toFixed(2)}</div>
-          </div>
-        </div>
-        <div>
-          <h4 className="font-medium text-sm mb-2">
-            Light Switches ({priceType === "sku" ? "Total Price (for a full pack)" : "Price per unit"}):
-          </h4>
-          <div className="text-xs space-y-1">
-            <div>Min: ${switchStats.min.toFixed(2)}</div>
-            <div>Q1: ${switchStats.q1.toFixed(2)}</div>
-            <div>Median: ${switchStats.median.toFixed(2)}</div>
-            <div>Mean: ${switchStats.mean.toFixed(2)}</div>
-            <div>Q3: ${switchStats.q3.toFixed(2)}</div>
-            <div>Max: ${switchStats.max.toFixed(2)}</div>
-          </div>
-        </div>
-      </div>
+      <StatsBox dimmerStats={dimmerStats} switchStats={switchStats} priceType={priceType} />
     </div>
   )
 }
+
+const StatsBox = ({ dimmerStats, switchStats, priceType }: any) => (
+  <div className="w-80 ml-4 bg-white border border-gray-200 rounded-md p-4">
+    <div className="mb-4">
+      <h4 className="font-medium text-sm mb-2">
+        Dimmer Switches ({priceType === "sku" ? "Total Price (for a full pack)" : "Price per unit"}):
+      </h4>
+      <div className="text-xs space-y-1">
+        <div>Min: ${dimmerStats.min.toFixed(2)}</div>
+        <div>Q1: ${dimmerStats.q1.toFixed(2)}</div>
+        <div>Median: ${dimmerStats.median.toFixed(2)}</div>
+        <div>Mean: ${dimmerStats.mean.toFixed(2)}</div>
+        <div>Q3: ${dimmerStats.q3.toFixed(2)}</div>
+        <div>Max: ${dimmerStats.max.toFixed(2)}</div>
+      </div>
+    </div>
+    <div>
+      <h4 className="font-medium text-sm mb-2">
+        Light Switches ({priceType === "sku" ? "Total Price (for a full pack)" : "Price per unit"}):
+      </h4>
+      <div className="text-xs space-y-1">
+        <div>Min: ${switchStats.min.toFixed(2)}</div>
+        <div>Q1: ${switchStats.q1.toFixed(2)}</div>
+        <div>Median: ${switchStats.median.toFixed(2)}</div>
+        <div>Mean: ${switchStats.mean.toFixed(2)}</div>
+        <div>Q3: ${switchStats.q3.toFixed(2)}</div>
+        <div>Max: ${switchStats.max.toFixed(2)}</div>
+      </div>
+    </div>
+  </div>
+);
+

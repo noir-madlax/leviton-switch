@@ -36,7 +36,7 @@ export default async function Home() {
               
               <BrandAnalysis data={data.brandAnalysis} productLists={data.productLists} />
               <ProductAnalysis data={data.productAnalysis} />
-              <PricingAnalysis data={data.pricingAnalysis} productLists={data.productLists} />
+              <PricingAnalysis data={data.pricingAnalysis} productLists={data.productLists} productAnalysis={data.productAnalysis} />
               <MarketInsights data={data.marketInsights} productLists={data.productLists} />
               <PackagePreferenceAnalysis data={data.packagePreferenceAnalysis} productLists={data.productLists} />
               

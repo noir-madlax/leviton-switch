@@ -75,21 +75,24 @@
 }
 
 .matrix-cell:hover {
-  @apply shadow-sm;
-  background-color: rgba(0, 0, 0, 0.04);
-  transform: translateY(-1px);
+  @apply shadow-lg;
+  background-color: rgba(0, 0, 0, 0.06);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .matrix-cell:focus {
   @apply outline-none ring-2 ring-blue-500 ring-opacity-50;
-  background-color: rgba(0, 0, 0, 0.04);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), 0 3px 8px rgba(0, 0, 0, 0.08);
 }
 
 .matrix-cell:active {
-  background-color: rgba(0, 0, 0, 0.06);
-  box-shadow: none;
-  transform: translateY(0);
+  background-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) inset;
+  transform: translateY(-1px) scale(0.98);
+  transition: all 120ms ease-out;
 }
 
 /* Interactive Bar Chart Styles */
@@ -180,9 +183,18 @@
 }
 
 .recharts-scatter circle:hover {
-  filter: brightness(1.1) saturate(1.15);
-  transform: scale(1.15);
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
+  filter: brightness(1.1) saturate(1.15) drop-shadow(0 6px 20px rgba(0, 0, 0, 0.25)) drop-shadow(0 3px 10px rgba(0, 0, 0, 0.15));
+  transform: scale(1.25) translateY(-2px);
+  animation: pulse-glow 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+  0% {
+    filter: brightness(1.1) saturate(1.15) drop-shadow(0 6px 20px rgba(0, 0, 0, 0.25)) drop-shadow(0 3px 10px rgba(0, 0, 0, 0.15));
+  }
+  100% {
+    filter: brightness(1.2) saturate(1.25) drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+  }
 }
 
 .recharts-pie-sector {

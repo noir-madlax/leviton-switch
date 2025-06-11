@@ -1,11 +1,27 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Card } from "@/components/ui/card"
 import { ViolinChart } from "@/components/charts/violin-chart"
 import { BrandViolinChart } from "@/components/charts/brand-violin-chart"
 import { PriceTypeSelector, type PriceType } from "@/components/price-type-selector"
 import { useProductPanel } from "@/lib/product-panel-context"
+import type { Product } from "@/lib/types"
+
+function calculateStats(products: Product[], priceType: PriceType) {
+  const prices = products.map(p => priceType === 'unit' ? p.unitPrice : p.price).filter(p => p !== null && p !== undefined);
+  if (prices.length === 0) {
+    return { min: 0, q1: 0, median: 0, mean: 0, q3: 0, max: 0 };
+  }
+  prices.sort((a, b) => a - b);
+  const min = prices[0];
+  const max = prices[prices.length - 1];
+  const q1 = prices[Math.floor(prices.length / 4)];
+  const median = prices[Math.floor(prices.length / 2)];
+  const q3 = prices[Math.floor((prices.length * 3) / 4)];
+  const mean = prices.reduce((a, b) => a + b, 0) / prices.length;
+  return { min, q1, median, mean, q3, max };
+}
 
 interface PricingAnalysisProps {
   data: {
@@ -41,44 +57,52 @@ interface PricingAnalysisProps {
       }[]
     }[]
   }
+  productAnalysis: {
+    priceVsRevenue: {
+      category: string
+      products: Product[]
+    }[]
+  }
   productLists: {
-    byBrand: Record<string, any[]>
-    bySegment: Record<string, any[]>
-    byPackageSize: Record<string, any[]>
+    byBrand: Record<string, Product[]>
+    bySegment: Record<string, Product[]>
+    byPackageSize: Record<string, Product[]>
   }
 }
 
-export function PricingAnalysis({ data, productLists }: PricingAnalysisProps) {
+export function PricingAnalysis({ data, productLists, productAnalysis }: PricingAnalysisProps) {
   const [priceType, setPriceType] = useState<PriceType>("unit")
   const { openPanel } = useProductPanel()
 
-  // Add error handling for data access
-  const getPrices = (category: number) => {
-    if (!data?.priceDistribution?.[category]) {
-      console.error(`Price distribution data not found for category ${category}`)
-      return []
-    }
-    return priceType === "sku"
-      ? data.priceDistribution[category].skuPrices || []
-      : data.priceDistribution[category].unitPrices || []
-  }
+  const dimmerProducts = useMemo(() => 
+    productAnalysis.priceVsRevenue.find(c => c.category === "Dimmer Switches")?.products || [], 
+    [productAnalysis]
+  );
+  
+  const switchProducts = useMemo(() =>
+    productAnalysis.priceVsRevenue.find(c => c.category === "Light Switches")?.products || [],
+    [productAnalysis]
+  );
 
-  const getStats = (category: number) => {
-    if (!data?.priceDistribution?.[category]?.stats) {
-      console.error(`Price stats not found for category ${category}`)
-      return {
-        min: 0,
-        q1: 0,
-        median: 0,
-        mean: 0,
-        q3: 0,
-        max: 0,
-      }
-    }
-    return priceType === "sku"
-      ? data.priceDistribution[category].stats.sku
-      : data.priceDistribution[category].stats.unit
-  }
+  const dimmerPrices = useMemo(() => 
+    dimmerProducts.map(p => priceType === 'unit' ? p.unitPrice : p.price),
+    [dimmerProducts, priceType]
+  );
+
+  const switchPrices = useMemo(() =>
+    switchProducts.map(p => priceType === 'unit' ? p.unitPrice : p.price),
+    [switchProducts, priceType]
+  );
+
+  const dimmerStats = useMemo(() => 
+    calculateStats(dimmerProducts, priceType),
+    [dimmerProducts, priceType]
+  );
+
+  const switchStats = useMemo(() =>
+    calculateStats(switchProducts, priceType),
+    [switchProducts, priceType]
+  );
 
   const getBrands = (category: number) => {
     if (!data?.brandPriceDistribution?.[category]?.brands) {
@@ -89,31 +113,20 @@ export function PricingAnalysis({ data, productLists }: PricingAnalysisProps) {
   }
 
   const handleViolinClick = (category: string, priceRange: { min: number; max: number }) => {
-    // Calculate the center price and use the same tolerance as tooltip (±5%)
     const centerPrice = (priceRange.min + priceRange.max) / 2
-    const tolerancePercent = 0.05  // 5% tolerance to match tooltip
-    const tolerance = centerPrice * tolerancePercent
-    
-    // Filter products by category and price range using same logic as tooltip
-    const allProducts = [
-      ...Object.values(productLists.byBrand).flat(),
-    ].filter(product => {
-      const matchesCategory = product.category === category
+    const tolerance = (priceRange.max - priceRange.min) / 2
+
+    const productsForCategory = category.includes("Dimmer") ? dimmerProducts : switchProducts;
+
+    const filteredProducts = productsForCategory.filter(product => {
       const price = priceType === 'unit' ? product.unitPrice : product.price
-      const inRange = Math.abs(price - centerPrice) <= tolerance
-      
-      console.log(`Product: ${product.name}, Category: ${product.category}, Price: ${price}, Center: ${centerPrice}, Tolerance: ±${tolerance.toFixed(2)} (${tolerancePercent*100}%), Matches: ${matchesCategory && inRange}`)
-      
-      return matchesCategory && inRange
+      return Math.abs(price - centerPrice) <= tolerance
     })
 
-    console.log(`Total products found: ${allProducts.length}`)
-    console.log('Filtered products:', allProducts.map(p => `${p.name} - ${p.category} - Unit: $${p.unitPrice}`))
-
     openPanel(
-      allProducts,
-      `${category}: $${(centerPrice - tolerance).toFixed(2)} - $${(centerPrice + tolerance).toFixed(2)}`,
-      `${allProducts.length} products found in ${category} with ${priceType === 'unit' ? 'unit' : 'SKU'} price within ±${tolerancePercent*100}% of $${centerPrice.toFixed(2)}`,
+      filteredProducts,
+      `${category}: $${priceRange.min.toFixed(2)} - $${priceRange.max.toFixed(2)}`,
+      `${filteredProducts.length} products found in ${category} with ${priceType === 'unit' ? 'unit' : 'SKU'} price within ±${tolerance.toFixed(2)} of $${centerPrice.toFixed(2)}`,
       { brand: true, category: false, priceRange: false, packSize: true }
     )
   }
@@ -149,15 +162,15 @@ export function PricingAnalysis({ data, productLists }: PricingAnalysisProps) {
         <PriceTypeSelector onChange={setPriceType} />
         <div className="h-[500px]">
           <ViolinChart
-            dimmerPrices={getPrices(0)}
-            switchPrices={getPrices(1)}
-            dimmerStats={getStats(0)}
-            switchStats={getStats(1)}
+            dimmerPrices={dimmerPrices}
+            switchPrices={switchPrices}
+            dimmerStats={dimmerStats}
+            switchStats={switchStats}
             priceType={priceType}
-            onViolinClick={(category, priceRange) => {
-              console.log('handleViolinClick called from PricingAnalysis')
-              handleViolinClick(category, priceRange)
-            }}
+            productLists={productLists}
+            onViolinClick={handleViolinClick}
+            dimmerProducts={dimmerProducts}
+            switchProducts={switchProducts}
           />
         </div>
       </Card>
