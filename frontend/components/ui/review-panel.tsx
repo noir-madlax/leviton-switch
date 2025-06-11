@@ -1,12 +1,15 @@
 "use client"
 
 import React, { useState } from 'react'
-import { X, Star, Shield, Filter, Search } from 'lucide-react'
+import { X, Star, Shield, Filter, Search, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Review } from '@/lib/reviewData'
 
 interface ReviewPanelProps {
@@ -37,6 +40,14 @@ export function ReviewPanel({
   const [brandFilter, setBrandFilter] = useState<string>('all')
   const [ratingFilter, setRatingFilter] = useState<string>('all')
   const [verifiedFilter, setVerifiedFilter] = useState<string>('all')
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+  
+  // Brand filter search state
+  const [brandSearchOpen, setBrandSearchOpen] = useState(false)
+  const [brandSearchTerm, setBrandSearchTerm] = useState('')
 
   // Apply filters
   React.useEffect(() => {
@@ -78,10 +89,22 @@ export function ReviewPanel({
     }
 
     setFilteredReviews(filtered)
+    setCurrentPage(1) // Reset to first page when filters change
   }, [reviews, searchTerm, sentimentFilter, brandFilter, ratingFilter, verifiedFilter])
 
   // Get unique values for filters
   const uniqueBrands = [...new Set(reviews.map(r => r.brand))].sort()
+  
+  // Filter brands based on search term
+  const filteredBrands = uniqueBrands.filter(brand => 
+    brand.toLowerCase().includes(brandSearchTerm.toLowerCase())
+  )
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredReviews.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentReviews = filteredReviews.slice(startIndex, endIndex)
 
   // Helper functions
   const getStarRating = (rating: number | string) => {
@@ -117,6 +140,11 @@ export function ReviewPanel({
     setBrandFilter('all')
     setRatingFilter('all')
     setVerifiedFilter('all')
+    setBrandSearchTerm('')
+  }
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)))
   }
 
   if (!isOpen) return null
@@ -135,7 +163,8 @@ export function ReviewPanel({
                   <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
                 )}
                 <p className="text-sm text-gray-500 mt-1">
-                  {filteredReviews.length} of {reviews.length} reviews
+                  Showing {startIndex + 1}-{Math.min(endIndex, filteredReviews.length)} of {filteredReviews.length} reviews
+                  {filteredReviews.length !== reviews.length && ` (${reviews.length} total)`}
                 </p>
               </div>
               <Button variant="ghost" size="sm" onClick={onClose}>
@@ -173,19 +202,56 @@ export function ReviewPanel({
                 </Select>
               )}
 
-              {/* Brand Filter */}
+              {/* Brand Filter - Searchable */}
               {showFilters.brand && (
-                <Select value={brandFilter} onValueChange={setBrandFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Brand" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Brands</SelectItem>
-                    {uniqueBrands.map(brand => (
-                      <SelectItem key={brand} value={brand}>{brand}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={brandSearchOpen} onOpenChange={setBrandSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={brandSearchOpen}
+                      className="justify-between"
+                    >
+                      {brandFilter === 'all' ? 'All Brands' : brandFilter}
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[300px] p-0">
+                    <Command>
+                      <CommandInput 
+                        placeholder="Search brands..." 
+                        value={brandSearchTerm}
+                        onValueChange={setBrandSearchTerm}
+                      />
+                      <CommandList>
+                        <CommandEmpty>No brands found.</CommandEmpty>
+                        <CommandGroup>
+                          <CommandItem
+                            onSelect={() => {
+                              setBrandFilter('all')
+                              setBrandSearchTerm('')
+                              setBrandSearchOpen(false)
+                            }}
+                          >
+                            All Brands
+                          </CommandItem>
+                          {filteredBrands.map((brand) => (
+                            <CommandItem
+                              key={brand}
+                              onSelect={() => {
+                                setBrandFilter(brand)
+                                setBrandSearchTerm('')
+                                setBrandSearchOpen(false)
+                              }}
+                            >
+                              {brand}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               )}
 
               {/* Rating Filter */}
@@ -230,19 +296,19 @@ export function ReviewPanel({
 
           {/* Reviews List */}
           <div className="flex-1 overflow-y-auto px-6 py-4">
-            {filteredReviews.length === 0 ? (
+            {currentReviews.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500">No reviews found matching your filters.</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredReviews.map((review, index) => (
+                {currentReviews.map((review, index) => (
                   <Card key={`${review.id}-${index}`} className="border-l-4 border-l-blue-200">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <CardTitle className="text-base font-medium mb-1">
-                            Review #{index + 1}
+                            Review #{startIndex + index + 1}
                           </CardTitle>
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             {/* Star Rating */}
@@ -251,13 +317,13 @@ export function ReviewPanel({
                                 <Star
                                   key={i}
                                   className={`h-4 w-4 ${
-                                                                      i < getStarRating(review.rating)
+                                                                       i < getStarRating(review.rating)
                                     ? 'text-yellow-400 fill-current'
                                     : 'text-gray-300'
                                 }`}
-                              />
-                            ))}
-                            <span className="ml-1">({review.rating})</span>
+                                />
+                              ))}
+                             <span className="ml-1">({review.rating})</span>
                             </div>
                             
                             {/* Verified Badge */}
@@ -303,6 +369,75 @@ export function ReviewPanel({
               </div>
             )}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="border-t bg-white px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-500">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <Pagination className="mx-0 w-auto">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          if (currentPage > 1) goToPage(currentPage - 1)
+                        }}
+                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    
+                    {/* Page numbers */}
+                    {(() => {
+                      const pages = []
+                      const maxVisible = 5
+                      let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2))
+                      let endPage = Math.min(totalPages, startPage + maxVisible - 1)
+                      
+                      // Adjust start page if we're near the end
+                      if (endPage - startPage + 1 < maxVisible) {
+                        startPage = Math.max(1, endPage - maxVisible + 1)
+                      }
+                      
+                      for (let i = startPage; i <= endPage; i++) {
+                        pages.push(i)
+                      }
+                      
+                      return pages.map((pageNumber) => (
+                        <PaginationItem key={`page-${pageNumber}`}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              goToPage(pageNumber)
+                            }}
+                            isActive={currentPage === pageNumber}
+                            className="cursor-pointer"
+                          >
+                            {pageNumber}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))
+                    })()}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          if (currentPage < totalPages) goToPage(currentPage + 1)
+                        }}
+                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
