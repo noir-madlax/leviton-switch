@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { UseCaseFeedback, ProductType } from '@/lib/categoryFeedback';
 import { getSatisfactionColor, getSatisfactionLevel, SatisfactionLegend } from '@/lib/satisfactionColors';
+import { useReviewPanel } from '@/lib/review-panel-context';
 
 interface CategoryUseCaseBarProps {
   data: UseCaseFeedback[];
@@ -14,6 +15,9 @@ interface CategoryUseCaseBarProps {
   description?: string;
   productType?: ProductType;
   onProductTypeChange?: (productType: ProductType) => void;
+  reviewData?: {
+    reviewsByCategory?: Record<string, any[]>
+  }
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -91,8 +95,10 @@ export default function CategoryUseCaseBar({
   title = "Use Case Satisfaction Analysis",
   description = "Bars show mention count, colors indicate satisfaction levels",
   productType = 'dimmer',
-  onProductTypeChange 
+  onProductTypeChange,
+  reviewData
 }: CategoryUseCaseBarProps) {
+  const { openPanel } = useReviewPanel()
   
   const chartData = data.map(item => ({
     ...item,
@@ -101,6 +107,27 @@ export default function CategoryUseCaseBar({
       item.useCase.substring(0, 15) + '...' : 
       item.useCase
   }));
+
+  const handleBarClick = (data: any, index: number) => {
+    if (data && data.displayName && reviewData?.reviewsByCategory) {
+      // Find the full use case name from the display name
+      const displayName = data.displayName
+      const useCaseItem = chartData.find(item => item.displayName === displayName)
+      
+      if (useCaseItem) {
+        const reviews = reviewData.reviewsByCategory[useCaseItem.useCase] || []
+        
+        if (reviews.length > 0) {
+          openPanel(
+            reviews,
+            `${useCaseItem.useCase} - Customer Reviews`,
+            `Reviews related to "${useCaseItem.useCase}" use case`,
+            { sentiment: true, brand: true, rating: true, verified: true }
+          )
+        }
+      }
+    }
+  }
 
   return (
     <Card className="w-full">
@@ -157,7 +184,12 @@ export default function CategoryUseCaseBar({
                 fontSize={12}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="totalMentions" radius={[4, 4, 0, 0]}>
+              <Bar 
+                dataKey="totalMentions" 
+                radius={[4, 4, 0, 0]} 
+                style={{ cursor: 'pointer' }}
+                onClick={handleBarClick}
+              >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={getSatisfactionColor(entry.satisfactionRate)} />
                 ))}

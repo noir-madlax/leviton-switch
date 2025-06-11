@@ -12,13 +12,16 @@ import { fetchDashboardData } from "@/lib/data"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProductPanelProvider } from "@/lib/product-panel-context"
 import { ProductPanel } from "@/components/ui/product-panel"
+import { ReviewPanelProvider } from "@/lib/review-panel-context"
+import { ReviewPanel } from "@/components/ui/review-panel"
 
 export default async function Home() {
   const data = await fetchDashboardData()
 
   return (
     <ProductPanelProvider>
-      <main className="min-h-screen bg-gray-50">
+      <ReviewPanelProvider>
+        <main className="min-h-screen bg-gray-50">
         <div className="container mx-auto max-w-7xl bg-white p-6 md:p-8 rounded-lg shadow-md my-6">
           <DashboardHeader />
           
@@ -62,6 +65,7 @@ export default async function Home() {
         
         <ProductPanel />
       </main>
+      </ReviewPanelProvider>
     </ProductPanelProvider>
   )
 }

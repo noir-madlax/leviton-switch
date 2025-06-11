@@ -728,6 +728,138 @@ def calculate_pricing_analysis(dimmer_df: pd.DataFrame, switch_df: pd.DataFrame)
         "brandPriceDistribution": brand_price_distribution
     }
 
+def create_review_data_with_products(dimmer_df: pd.DataFrame, switch_df: pd.DataFrame) -> Dict:
+    """Create comprehensive review insights data with product lists for each category"""
+    
+    # Combine dataframes for review analysis
+    combined_df = pd.concat([dimmer_df, switch_df], ignore_index=True)
+    
+    # Create category-based product lists for review insights
+    def create_category_products(df: pd.DataFrame, category_filter: str, feedback_type: str) -> List[Dict]:
+        """Create product list for a specific feedback category"""
+        # Filter products based on category (simulate review-based filtering)
+        # This is a simplified approach - in real implementation, you'd have actual review data
+        
+        # For demonstration, we'll create logical groupings based on product characteristics
+        filtered_products = []
+        
+        if category_filter == "Installation Complexity":
+            # Products that might have installation issues (smart switches, complex multi-way)
+            smart_products = df[df['clean_title'].str.contains('smart|wifi|hub|alexa|google', case=False, na=False)]
+            filtered_products = smart_products.nlargest(20, 'volume')
+        elif category_filter == "LED Flickering":
+            # Dimmer switches are more prone to LED flickering
+            dimmer_products = df[df['category'] == 'Dimmer Switches']
+            filtered_products = dimmer_products.nlargest(20, 'volume')
+        elif category_filter == "WiFi Connectivity":
+            # Smart/WiFi enabled products
+            wifi_products = df[df['clean_title'].str.contains('wifi|smart|app|remote|voice', case=False, na=False)]
+            filtered_products = wifi_products.nlargest(20, 'volume')
+        elif category_filter == "Smart Home Integration":
+            # Products with smart features (positive feedback)
+            smart_products = df[df['clean_title'].str.contains('smart|alexa|google|hub|wifi|app', case=False, na=False)]
+            filtered_products = smart_products.nlargest(20, 'volume')
+        elif category_filter == "Dimming Performance":
+            # All dimmer switches
+            dimmer_products = df[df['category'] == 'Dimmer Switches']
+            filtered_products = dimmer_products.nlargest(20, 'volume')
+        elif category_filter == "Easy Installation":
+            # Standard switches (typically easier to install)
+            standard_products = df[~df['clean_title'].str.contains('smart|wifi|hub|3-way|4-way', case=False, na=False)]
+            filtered_products = standard_products.nlargest(20, 'volume')
+        elif category_filter == "Whole House Control":
+            # Multi-pack products suitable for whole house
+            multipack_products = df[df['pack_count'] >= 3]
+            filtered_products = multipack_products.nlargest(20, 'volume')
+        elif category_filter == "Smart Home Automation":
+            # Smart products with automation features
+            automation_products = df[df['clean_title'].str.contains('smart|automation|schedule|timer', case=False, na=False)]
+            filtered_products = automation_products.nlargest(20, 'volume')
+        elif category_filter == "Energy Saving":
+            # Dimmer switches and smart switches (energy efficiency)
+            energy_products = df[(df['category'] == 'Dimmer Switches') | 
+                               (df['clean_title'].str.contains('smart|led|energy|efficient', case=False, na=False))]
+            filtered_products = energy_products.nlargest(20, 'volume')
+        elif category_filter == "Security & Safety":
+            # Motion sensors, occupancy sensors, and safety switches
+            safety_products = df[df['clean_title'].str.contains('motion|occupancy|sensor|gfci|safety', case=False, na=False)]
+            filtered_products = safety_products.nlargest(20, 'volume')
+        elif category_filter == "Outdoor Use":
+            # Weather resistant, outdoor rated products
+            outdoor_products = df[df['clean_title'].str.contains('outdoor|weather|waterproof|resistant', case=False, na=False)]
+            filtered_products = outdoor_products.nlargest(20, 'volume')
+        elif category_filter == "Voice Assistant Integration":
+            # Alexa, Google, Siri compatible products
+            voice_products = df[df['clean_title'].str.contains('alexa|google|siri|voice|assistant', case=False, na=False)]
+            filtered_products = voice_products.nlargest(20, 'volume')
+        else:
+            # Default: top products by volume
+            filtered_products = df.nlargest(20, 'volume')
+        
+        products = []
+        for _, row in filtered_products.iterrows():
+            product = {
+                "id": f"rev_{len(products) + 1}",
+                "name": row['clean_title'],
+                "brand": row['clean_brand'],
+                "price": float(row['price_usd']) if not pd.isna(row['price_usd']) else 0.0,
+                "unitPrice": float(row['unit_price']) if not pd.isna(row['unit_price']) else float(row['price_usd']) if not pd.isna(row['price_usd']) else 0.0,
+                "revenue": int(row['revenue']) if not pd.isna(row['revenue']) else 0,
+                "volume": int(row['volume']) if not pd.isna(row['volume']) else 0,
+                "url": row['product_url'] if not pd.isna(row['product_url']) else "",
+                "category": row['category'],
+                "productSegment": row['product_segment'] if not pd.isna(row['product_segment']) else "",
+                "packCount": int(row['pack_count']) if not pd.isna(row['pack_count']) else 1,
+                "reviewCategory": category_filter,
+                "feedbackType": feedback_type
+            }
+            products.append(product)
+        
+        return products
+    
+    # Create product lists for major review categories
+    review_categories = {
+        # Pain points (negative feedback)
+        "Installation Complexity": "negative",
+        "LED Flickering": "negative", 
+        "WiFi Connectivity": "negative",
+        "Color Matching": "negative",
+        "App Setup Difficulty": "negative",
+        "Switch Mechanism Failure": "negative",
+        "Dimming Range Limited": "negative",
+        "Buzzing Noise": "negative",
+        "Build Quality Issues": "negative",
+        "Touch Responsiveness": "negative",
+        
+        # Positive feedback  
+        "Smart Home Integration": "positive",
+        "Dimming Performance": "positive",
+        "Easy Installation": "positive",
+        "Visual Appearance": "positive", 
+        "Voice Control": "positive",
+        "Build Quality": "positive",
+        "LED Compatibility": "positive",
+        "Night Light Feature": "positive",
+        
+        # Use cases (positive satisfaction contexts)
+        "Whole House Control": "positive",
+        "Smart Home Automation": "positive", 
+        "Energy Saving": "positive",
+        "Security & Safety": "positive",
+        "Convenience & Comfort": "positive",
+        "Outdoor Use": "positive",
+        "Multi-Room Synchronization": "positive",
+        "Voice Assistant Integration": "positive"
+    }
+    
+    category_product_lists = {}
+    for category, feedback_type in review_categories.items():
+        category_product_lists[category] = create_category_products(combined_df, category, feedback_type)
+    
+    return {
+        "byReviewCategory": category_product_lists
+    }
+
 def calculate_package_preference_analysis(dimmer_df: pd.DataFrame, switch_df: pd.DataFrame) -> Dict:
     """Calculates data for package preference analysis with separate data for dimmers and switches."""
     
@@ -850,6 +982,7 @@ def generate_data_ts(csv_path: str, output_path: str):
     brand_product_lists = create_brand_product_lists(dimmer_df, switch_df)
     segment_product_lists = create_segment_product_lists(dimmer_df, switch_df)
     package_size_product_lists = create_package_size_product_lists(dimmer_df, switch_df)
+    review_product_lists = create_review_data_with_products(dimmer_df, switch_df)
     
     # Calculate metrics
     executive_summary = calculate_executive_summary(all_df, dimmer_df, switch_df)
@@ -899,7 +1032,8 @@ export async function fetchDashboardData() {{
     productLists: {{
       byBrand: {json.dumps(brand_product_lists, indent=8)},
       bySegment: {json.dumps(segment_product_lists, indent=8)},
-      byPackageSize: {json.dumps(package_size_product_lists, indent=8)}
+      byPackageSize: {json.dumps(package_size_product_lists, indent=8)},
+      byReviewCategory: {json.dumps(review_product_lists['byReviewCategory'], indent=8)}
     }}
   }};
 }}

@@ -6,11 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { CategoryFeedback, ProductType, getAvailableProductTypes } from '@/lib/categoryFeedback'
 import { getSatisfactionColor, SatisfactionLegend } from '@/lib/satisfactionColors'
+import { useReviewPanel } from '@/lib/review-panel-context'
 
 interface CategoryPositiveFeedbackBarProps {
   data: CategoryFeedback[]
   productType?: ProductType
   onProductTypeChange?: (productType: ProductType) => void
+  reviewData?: {
+    reviewsByCategory?: Record<string, any[]>
+  }
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -44,9 +48,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null
 }
 
-export function CategoryPositiveFeedbackBar({ data, productType = 'dimmer', onProductTypeChange }: CategoryPositiveFeedbackBarProps) {
+export function CategoryPositiveFeedbackBar({ data, productType = 'dimmer', onProductTypeChange, reviewData }: CategoryPositiveFeedbackBarProps) {
   const [selectedProductType, setSelectedProductType] = useState<ProductType>(productType)
   const productTypes = getAvailableProductTypes()
+  const { openPanel } = useReviewPanel()
 
   // 同步外部的productType变化
   useEffect(() => {
@@ -68,11 +73,27 @@ export function CategoryPositiveFeedbackBar({ data, productType = 'dimmer', onPr
     }
   }
 
+  const handleBarClick = (data: any, index: number) => {
+    if (data && data.category && reviewData?.reviewsByCategory) {
+      const categoryName = data.category
+      const reviews = reviewData.reviewsByCategory[categoryName] || []
+      
+      if (reviews.length > 0) {
+        openPanel(
+          reviews,
+          `${categoryName} - Customer Reviews`,
+          `Positive reviews highlighting "${categoryName}" strengths`,
+          { sentiment: true, brand: true, rating: true, verified: true }
+        )
+      }
+    }
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          Top 10 Customer Delights by Category
+          Top 10 Customer Delights by Category 🖱️
           <SatisfactionLegend />
         </CardTitle>
         <div className="flex items-center justify-between">
@@ -127,7 +148,12 @@ export function CategoryPositiveFeedbackBar({ data, productType = 'dimmer', onPr
                 fontSize={12}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="positiveCount" radius={[4, 4, 0, 0]}>
+              <Bar 
+                dataKey="positiveCount" 
+                radius={[4, 4, 0, 0]} 
+                style={{ cursor: 'pointer' }}
+                onClick={handleBarClick}
+              >
                 {filteredData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={getBarColor(entry)} />
                 ))}

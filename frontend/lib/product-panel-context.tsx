@@ -14,6 +14,8 @@ interface Product {
   category?: string
   productSegment?: string
   packCount?: number
+  reviewCategory?: string
+  feedbackType?: string
 }
 
 interface ProductPanelContextType {

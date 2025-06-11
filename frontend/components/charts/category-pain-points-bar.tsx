@@ -6,11 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { CategoryFeedback, ProductType, getAvailableProductTypes } from '@/lib/categoryFeedback'
 import { getSatisfactionColor, SatisfactionLegend } from '@/lib/satisfactionColors'
+import { useReviewPanel } from '@/lib/review-panel-context'
 
 interface CategoryPainPointsBarProps {
   data: CategoryFeedback[]
   productType?: ProductType
   onProductTypeChange?: (productType: ProductType) => void
+  reviewData?: {
+    reviewsByCategory?: Record<string, any[]>
+  }
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -44,9 +48,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null
 }
 
-export function CategoryPainPointsBar({ data, productType = 'dimmer', onProductTypeChange }: CategoryPainPointsBarProps) {
+export function CategoryPainPointsBar({ data, productType = 'dimmer', onProductTypeChange, reviewData }: CategoryPainPointsBarProps) {
   const [selectedProductType, setSelectedProductType] = useState<ProductType>(productType)
   const productTypes = getAvailableProductTypes()
+  const { openPanel } = useReviewPanel()
 
   // 同步外部的productType变化
   useEffect(() => {
@@ -68,11 +73,27 @@ export function CategoryPainPointsBar({ data, productType = 'dimmer', onProductT
     }
   }
 
+    const handleBarClick = (data: any, index: number) => {
+    if (data && data.category && reviewData?.reviewsByCategory) {
+      const categoryName = data.category
+      const reviews = reviewData.reviewsByCategory[categoryName] || []
+      
+      if (reviews.length > 0) {
+        openPanel(
+          reviews,
+          `${categoryName} - Customer Reviews`,
+          `Reviews mentioning "${categoryName}" issues and experiences`,
+          { sentiment: true, brand: true, rating: true, verified: true }
+        )
+      }
+    }
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          Top 10 Most Critical Categories by Negative Reviews Count
+          Top 10 Most Critical Categories by Negative Reviews Count 🖱️
           <SatisfactionLegend />
         </CardTitle>
         <div className="flex items-center justify-between">
@@ -127,7 +148,12 @@ export function CategoryPainPointsBar({ data, productType = 'dimmer', onProductT
                 fontSize={12}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="negativeCount" radius={[4, 4, 0, 0]}>
+              <Bar 
+                dataKey="negativeCount" 
+                radius={[4, 4, 0, 0]} 
+                style={{ cursor: 'pointer' }}
+                onClick={handleBarClick}
+              >
                 {filteredData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={getBarColor(entry)} />
                 ))}
