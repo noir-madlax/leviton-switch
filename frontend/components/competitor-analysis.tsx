@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Card } from "@/components/ui/card"
 import { ExternalLink } from "lucide-react"
 import { CompetitorMatrix } from "@/components/charts/competitor-matrix"
@@ -9,11 +9,101 @@ import { CustomerSentimentBar } from "@/components/charts/customer-sentiment-bar
 import { ReviewPanel } from "@/components/ui/review-panel"
 import { useReviewPanel } from "@/lib/review-panel-context"
 import { getCompetitorAnalysisData, getUseCaseAnalysisData } from "@/lib/competitorAnalysis"
+import { allReviewData } from "@/lib/reviewData"
 
 export function CompetitorAnalysis() {
   const competitorData = getCompetitorAnalysisData()
   const useCaseData = getUseCaseAnalysisData()
   const reviewPanel = useReviewPanel()
+
+  // Map product names to their ASINs
+  const productToAsin: Record<string, string> = {
+    'Leviton D26HD': 'B0BVKYKKRK',
+    'Leviton D215S': 'B0BVKZLT3B', 
+    'Lutron Caseta Diva': 'B0BSHKS26L',
+    'TP Link Switch': 'B01EZV35QU',
+    'Leviton DSL06': 'B00NG0ELL0',
+    'Lutron Diva': 'B085D8M2MR'
+  }
+
+  // Generate matrix data based on actual review counts
+  const realMatrixData = useMemo(() => {
+    const products = competitorData.targetProducts
+    const categories = [...new Set(competitorData.matrixData.map(item => item.category))]
+    
+    const realData: any[] = []
+    
+    products.forEach(product => {
+      const productAsin = productToAsin[product]
+      if (!productAsin) return
+      
+      categories.forEach(category => {
+        const categoryReviews = allReviewData[category] || []
+        const productReviews = categoryReviews.filter(review => review.productId === productAsin)
+        
+        // Calculate satisfaction rate from actual reviews
+        const positiveReviews = productReviews.filter(review => review.sentiment === 'positive')
+        const negativeReviews = productReviews.filter(review => review.sentiment === 'negative')
+        const totalReviews = positiveReviews.length + negativeReviews.length
+        const satisfactionRate = totalReviews > 0 ? (positiveReviews.length / totalReviews) * 100 : 0
+        
+        // Get category type from original data
+        const originalData = competitorData.matrixData.find(item => 
+          item.product === product && item.category === category
+        )
+        
+        realData.push({
+          product,
+          category,
+          categoryType: originalData?.categoryType || 'Physical',
+          mentions: productReviews.length, // Use actual review count
+          satisfactionRate: Math.round(satisfactionRate * 10) / 10,
+          positiveCount: positiveReviews.length,
+          negativeCount: negativeReviews.length,
+          totalReviews: totalReviews
+        })
+      })
+    })
+    
+    return realData
+  }, [competitorData, allReviewData])
+
+  // Generate use case matrix data based on actual review counts
+  const realUseCaseData = useMemo(() => {
+    const products = useCaseData.targetProducts
+    const useCases = [...new Set(useCaseData.matrixData.map(item => item.useCase))]
+    
+    const realData: any[] = []
+    
+    products.forEach(product => {
+      const productAsin = productToAsin[product]
+      if (!productAsin) return
+      
+      useCases.forEach(useCase => {
+        const categoryReviews = allReviewData[useCase] || []
+        const productReviews = categoryReviews.filter(review => review.productId === productAsin)
+        
+        // Calculate satisfaction rate from actual reviews
+        const positiveReviews = productReviews.filter(review => review.sentiment === 'positive')
+        const negativeReviews = productReviews.filter(review => review.sentiment === 'negative')
+        const totalReviews = positiveReviews.length + negativeReviews.length
+        const satisfactionRate = totalReviews > 0 ? (positiveReviews.length / totalReviews) * 100 : 0
+        
+        realData.push({
+          product,
+          useCase,
+          mentions: productReviews.length, // Use actual review count
+          satisfactionRate: Math.round(satisfactionRate * 10) / 10,
+          positiveCount: positiveReviews.length,
+          negativeCount: negativeReviews.length,
+          totalReviews: totalReviews,
+          gapLevel: Math.round((100 - satisfactionRate) * 10) / 10
+        })
+      })
+    })
+    
+    return realData
+  }, [useCaseData, allReviewData])
 
   // Amazon product URLs for focal products
   const productUrls: Record<string, string> = {
@@ -106,17 +196,18 @@ export function CompetitorAnalysis() {
           🏆 Competitor Delights and Pain Points Matrix
         </h2>
         <div className="bg-blue-50 border-l-4 border-blue-600 p-4 mb-6">
-          <strong>How to read this table:</strong> Each cell shows the number of customer mentions (large number) for that product-category combination, 
-          with the satisfaction rate (%) below. Categories are ranked by average mention frequency across all products. 
+          <strong>How to read this table:</strong> Each cell shows the number of unique customer reviews (large number) for that product-category combination, 
+          with the satisfaction rate (%) below. Categories are ranked by frequency across all products. 
+          <strong>Click any cell to view the actual reviews.</strong> 
           Color coding: <span className="bg-green-100 text-green-800 px-1 rounded">Green (85%+ satisfaction)</span>, 
           <span className="bg-yellow-100 text-yellow-800 px-1 rounded">Yellow (70-84%)</span>, 
           <span className="bg-orange-100 text-orange-800 px-1 rounded">Orange (60-69%)</span>, 
           <span className="bg-red-100 text-red-800 px-1 rounded">Red (&lt;60%)</span>, 
-          <span className="bg-blue-50 text-blue-700 px-1 rounded">Light Blue (mentions only, no satisfaction data)</span>.
+          <span className="bg-gray-100 text-gray-400 px-1 rounded">Gray (no reviews)</span>.
         </div>
 
         <CompetitorMatrix 
-          data={competitorData.matrixData}
+          data={realMatrixData}
           targetProducts={competitorData.targetProducts}
         />
       </section>
@@ -127,17 +218,18 @@ export function CompetitorAnalysis() {
           🎯 Use Case Matrix
         </h2>
         <div className="bg-purple-50 border-l-4 border-purple-600 p-4 mb-6">
-          <strong>How to read this table:</strong> Each cell shows the number of customer mentions (large number) for that product-use case combination, 
-          with the satisfaction rate (%) below. Use cases are ranked by average mention frequency across all products. 
+          <strong>How to read this table:</strong> Each cell shows the number of unique customer reviews (large number) for that product-use case combination, 
+          with the satisfaction rate (%) below. Use cases are ranked by frequency across all products. 
+          <strong>Click any cell to view the actual reviews.</strong> 
           Color coding: <span className="bg-green-100 text-green-800 px-1 rounded">Green (85%+ satisfaction)</span>, 
           <span className="bg-yellow-100 text-yellow-800 px-1 rounded">Yellow (70-84%)</span>, 
           <span className="bg-orange-100 text-orange-800 px-1 rounded">Orange (60-69%)</span>, 
           <span className="bg-red-100 text-red-800 px-1 rounded">Red (&lt;60%)</span>, 
-          <span className="bg-blue-50 text-blue-700 px-1 rounded">Light Blue (mentions only, no satisfaction data)</span>.
+          <span className="bg-gray-100 text-gray-400 px-1 rounded">Gray (no reviews)</span>.
         </div>
 
         <MissedOpportunitiesMatrix 
-          data={useCaseData.matrixData}
+          data={realUseCaseData}
           targetProducts={useCaseData.targetProducts}
         />
       </section>

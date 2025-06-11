@@ -38,7 +38,7 @@ export function MissedOpportunitiesMatrix({ data, targetProducts }: UseCaseMatri
     
     // Add null check for allReviewData and the specific use case
     if (!allReviewData || !allReviewData[useCase]) {
-      console.warn(`No review data found for use case: ${useCase}`)
+      console.warn(`No review data found for use case: "${useCase}"`)
       return
     }
     
@@ -56,7 +56,7 @@ export function MissedOpportunitiesMatrix({ data, targetProducts }: UseCaseMatri
     openPanel(
       reviewsToShow, 
       `${useCase} Reviews`, 
-      `${product} • ${cellData.mentions} mentions • ${cellData.satisfactionRate}% satisfaction • ${productReviews.length} product-specific reviews`,
+      `${product} • ${cellData.mentions} reviews • ${cellData.satisfactionRate}% satisfaction`,
       { sentiment: true, brand: true, rating: true, verified: true }
     )
   }

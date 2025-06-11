@@ -56,7 +56,7 @@ export function CompetitorMatrix({ data, targetProducts }: CompetitorMatrixProps
     openPanel(
       reviewsToShow, 
       `${category} Reviews`, 
-      `${product} • ${cellData.mentions} mentions • ${cellData.satisfactionRate}% satisfaction • ${productReviews.length} product-specific reviews`,
+      `${product} • ${cellData.mentions} reviews • ${cellData.satisfactionRate}% satisfaction`,
       { sentiment: true, brand: true, rating: true, verified: true }
     )
   }
