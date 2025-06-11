@@ -119,7 +119,7 @@ export function CategoryPainPointsBar({ data, productType = 'dimmer', onProductT
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-[500px] w-full">
+        <div className="h-[450px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={filteredData}

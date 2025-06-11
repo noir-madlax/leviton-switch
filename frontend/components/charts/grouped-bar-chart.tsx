@@ -179,15 +179,18 @@ export function GroupedBarChart({
         />
         <Legend 
           verticalAlign="top"
-          height={50}
+          height={80}
           wrapperStyle={{ 
-            paddingBottom: '15px',
-            fontSize: '13px'
+            paddingBottom: '5px',
+            fontSize: '11px',
+            lineHeight: '1.2'
           }}
           iconType="rect"
           iconSize={18}
+          layout="horizontal"
+          align="center"
           payload={data.map((item, index) => ({
-            value: item.name,
+            value: item.name.replace('\n', ' '),
             type: 'rect',
             color: colors[index % colors.length],
             id: item.name
