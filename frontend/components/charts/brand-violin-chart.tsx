@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useRef } from "react"
+import { useMemo, useState, useRef, useLayoutEffect } from "react"
 import { ResponsiveContainer } from "recharts"
 import type { PriceType } from "@/components/price-type-selector"
 
@@ -12,7 +12,7 @@ interface BrandViolinChartProps {
   }[]
   priceType: PriceType
   category: string
-  onViolinClick?: (brand: string) => void
+  onViolinClick?: (brand: string, category: string) => void
 }
 
 interface ChartRendererProps extends BrandViolinChartProps {
@@ -55,8 +55,9 @@ function kde(data: number[], bandwidth: number, min: number, max: number, steps:
 // Function to normalize density values to a specific range
 function normalizeDensity(densityData: [number, number][], maxHeight: number): [number, number][] {
   const maxDensity = Math.max(...densityData.map((d) => d[1]))
-  if (maxDensity === 0) return densityData.map(([x, y]) => [x, 0])
-  return densityData.map(([x, y]) => [x, (y / maxDensity) * maxHeight])
+  const minWidth = 0.5 // Small constant minimal width in pixels
+  if (maxDensity === 0) return densityData.map(([x]) => [x, minWidth])
+  return densityData.map(([x, y]) => [x, Math.max(minWidth, (y / maxDensity) * maxHeight)])
 }
 
 // Function to lighten colors for tooltip background
@@ -82,6 +83,8 @@ function lightenColor(color: string, percent: number): string {
 
 function ChartRenderer({ brands, priceType, category, width = 800, height = 370, onViolinClick }: ChartRendererProps) {
   const svgRef = useRef<SVGSVGElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [hoverState, setHoverState] = useState<HoverState>({
     visible: false,
     x: 0,
@@ -92,9 +95,27 @@ function ChartRenderer({ brands, priceType, category, width = 800, height = 370,
     brand: ""
   })
 
-  const layout = {
-    width: width,
-    height: height,
+  useLayoutEffect(() => {
+    if (containerRef.current) {
+      const { width, height } = containerRef.current.getBoundingClientRect();
+      setDimensions({ width, height });
+
+      const resizeObserver = new ResizeObserver(entries => {
+        if (!Array.isArray(entries) || !entries.length) {
+          return;
+        }
+        const entry = entries[0];
+        setDimensions({ width: entry.contentRect.width, height: entry.contentRect.height });
+      });
+
+      resizeObserver.observe(containerRef.current);
+      return () => resizeObserver.disconnect();
+    }
+  }, []);
+
+  const layout = useMemo(() => ({
+    width: dimensions.width || width,
+    height: dimensions.height || height,
     marginTop: 30,
     marginBottom: 70,
     marginLeft: 70,
@@ -103,7 +124,7 @@ function ChartRenderer({ brands, priceType, category, width = 800, height = 370,
     get chartHeight() { return this.height - this.marginTop - this.marginBottom },
     get yAxisBottom() { return this.height - this.marginBottom },
     yAxisTickIncrement: 50,
-  }
+  }), [dimensions.width, dimensions.height, width, height])
 
   const chartData = useMemo(() => {
     const filtered = brands
@@ -120,7 +141,7 @@ function ChartRenderer({ brands, priceType, category, width = 800, height = 370,
 
     const data = filtered.map(brand => {
       const prices = priceType === "sku" ? brand.skuPrices : brand.unitPrices
-      const bandwidth = 8
+      const bandwidth = 1.5
       const min = Math.max(0, Math.min(...prices) - 10)
       const max = Math.min(maxPrice, Math.max(...prices) + 10)
       const sortedPrices = [...prices].sort((a, b) => a - b)
@@ -188,33 +209,28 @@ function ChartRenderer({ brands, priceType, category, width = 800, height = 370,
     const rect = svgRef.current.getBoundingClientRect()
     const svgX = event.clientX - rect.left
     const svgY = event.clientY - rect.top
-
-    const x = (svgX / rect.width) * layout.width
-    const y = (svgY / rect.height) * layout.height
     
-    const brandIndex = Math.floor((x - layout.marginLeft) / brandWidth)
+    const brandIndex = Math.floor((svgX - layout.marginLeft) / brandWidth)
 
-    if (brandIndex >= 0 && brandIndex < brandData.length) {
+    if (brandIndex >= 0 && brandIndex < brandData.length && 
+        svgX >= layout.marginLeft && svgX <= layout.marginLeft + layout.chartWidth && 
+        svgY >= layout.marginTop && svgY <= layout.marginTop + layout.chartHeight) {
       const brand = brandData[brandIndex]
       const xCenter = layout.marginLeft + brandIndex * brandWidth + brandWidth / 2
-      const price = ((layout.yAxisBottom - y) / layout.chartHeight) * maxPrice
+      const price = ((layout.yAxisBottom - svgY) / layout.chartHeight) * maxPrice
 
-      if (y >= layout.marginTop && y <= layout.yAxisBottom) {
-        const violinHalfWidth = getViolinWidth(brand.density, price)
-        
-        if (Math.abs(x - xCenter) <= violinHalfWidth) {
-          setHoverState({
-            visible: true,
-            x: xCenter,
-            y,
-            cursorX: x,
-            price,
-            products: brand.count,
-            brand: brand.name,
-          })
-        } else {
-          setHoverState(prev => ({ ...prev, visible: false }))
-        }
+      const violinHalfWidth = getViolinWidth(brand.density, price)
+      
+      if (Math.abs(svgX - xCenter) <= violinHalfWidth) {
+        setHoverState({
+          visible: true,
+          x: xCenter,
+          y: svgY,
+          cursorX: svgX,
+          price,
+          products: brand.count,
+          brand: brand.name,
+        })
       } else {
         setHoverState(prev => ({ ...prev, visible: false }))
       }
@@ -232,42 +248,46 @@ function ChartRenderer({ brands, priceType, category, width = 800, height = 370,
 
     const rect = svgRef.current.getBoundingClientRect()
     const svgX = event.clientX - rect.left
-    const x = (svgX / rect.width) * layout.width
-    const brandIndex = Math.floor((x - layout.marginLeft) / brandWidth)
+    const brandIndex = Math.floor((svgX - layout.marginLeft) / brandWidth)
 
     if (brandIndex >= 0 && brandIndex < brandData.length) {
       const brand = brandData[brandIndex]
-      onViolinClick(brand.name)
+      onViolinClick(brand.name, category)
     }
   }
 
-  if (layout.chartHeight <= 0) {
+  if (layout.chartHeight <= 0 || dimensions.width === 0 || dimensions.height === 0) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-500">Chart is too small to display.</p>
+      <div className="h-full w-full relative" ref={containerRef}>
+        <div className="flex items-center justify-center h-full">
+          <p className="text-gray-500">Chart is too small to display.</p>
+        </div>
       </div>
     )
   }
 
   if (brandData.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-500">No sufficient data for violin plots</p>
+      <div className="h-full w-full relative" ref={containerRef}>
+        <div className="flex items-center justify-center h-full">
+          <p className="text-gray-500">No sufficient data for violin plots</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="h-full w-full relative">
+    <div className="h-full w-full relative" ref={containerRef}>
       <svg 
         ref={svgRef}
-        viewBox={`0 0 ${layout.width} ${layout.height}`} 
+        width={dimensions.width}
+        height={dimensions.height}
         className="w-full h-full cursor-pointer"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
       >
-        <rect width={layout.width} height={layout.height} fill="#f8fafc" />
+        <rect x={layout.marginLeft} y={layout.marginTop} width={layout.chartWidth} height={layout.chartHeight} fill="#f8fafc" />
 
         {yAxisLabels.map((price) => (
           <line
@@ -396,8 +416,8 @@ function ChartRenderer({ brands, priceType, category, width = 800, height = 370,
         <div
           className="absolute pointer-events-none z-10 p-3 rounded-lg shadow-lg border text-sm"
           style={{
-            left: `${(hoverState.cursorX / layout.width) * 100}%`,
-            top: `${(hoverState.y / layout.height) * 100}%`,
+            left: `${hoverState.cursorX}px`,
+            top: `${hoverState.y}px`,
             transform: "translate(-50%, calc(-100% - 15px))",
             backgroundColor: lightenColor(brandColors[hoverState.brand] || brandColors.Other, 0.4),
             width: "33vw",
@@ -418,8 +438,6 @@ function ChartRenderer({ brands, priceType, category, width = 800, height = 370,
 
 export function BrandViolinChart({ brands, priceType, category, onViolinClick }: BrandViolinChartProps) {
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <ChartRenderer brands={brands} priceType={priceType} category={category} onViolinClick={onViolinClick} />
-    </ResponsiveContainer>
+    <ChartRenderer brands={brands} priceType={priceType} category={category} onViolinClick={onViolinClick} />
   )
 }

@@ -131,13 +131,31 @@ export function PricingAnalysis({ data, productLists, productAnalysis }: Pricing
     )
   }
 
-  const handleBrandViolinClick = (brand: string) => {
-    const products = productLists.byBrand[brand] || []
+  const handleBrandViolinClick = (brand: string, category: string) => {
+    const allBrandProducts = productLists.byBrand[brand] || []
+    const categoryProducts = category === "Dimmer Switches" ? dimmerProducts : switchProducts
+    
+    // Filter brand products directly by category instead of trying to match different datasets
+    const filteredProducts = allBrandProducts.filter(product => {
+      // Check if product has a category field
+      if (product.category) {
+        return product.category === category
+      }
+      // If no category field, infer from product name or other fields
+      const productName = product.name?.toLowerCase() || ''
+      const isDimmer = productName.includes('dimmer')
+      const isTargetDimmer = category === "Dimmer Switches"
+      
+      return isDimmer === isTargetDimmer
+    })
+    
+    console.log('Filtered products:', filteredProducts.length)
+    
     openPanel(
-      products,
-      `${brand} Products`,
-      `All products from ${brand}`,
-      { brand: false, category: true, priceRange: true, packSize: true }
+      filteredProducts,
+      `${brand} - ${category}`,
+      `${filteredProducts.length} ${category.toLowerCase()} from ${brand}`,
+      { brand: false, category: false, priceRange: true, packSize: true }
     )
   }
 
